@@ -1,0 +1,6 @@
+/dump
+.idea/
+__pycache__/
+.env
+storage
+configs.py
