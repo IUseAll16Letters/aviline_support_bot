@@ -1,4 +1,8 @@
+from pathlib import Path
 
+
+ROOT_PATH = Path(__file__).parent
+TEMPLATES = ROOT_PATH / 'templates'
 
 AVAILABLE_SERVICES = ['purchase', 'support']
 AVAILABLE_PRODUCTS = ['видеорегистратор', 'электропривод багажника', 'парковочные системы', 'камера заднего вида',
@@ -32,4 +36,4 @@ GET_NAME_PATTERN = r'([a-zа-яA-ZА-Я]+[-\s.]*)*[a-zа-яA-ZА-Я]{2,}$'
 
 CLEAN_PHONE_PATTERN = r'[^\d]'
 GET_PHONE_PATTERN = r'\d{7,11}'
-GET_EMAIL_PATTERN = r''
+GET_EMAIL_PATTERN = r'(\w+\.)*\w+@([a-zA-Z]+\.)+[a-zA-Z]{2,}'

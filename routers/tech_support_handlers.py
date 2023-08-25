@@ -6,7 +6,7 @@ from pathlib import Path
 from states import BaseState, TechSupportState, PurchaseState
 from keyboards import get_inline_keyboard_builder
 from constants import AVAILABLE_PRODUCTS, KNOWN_PROBLEMS
-from utils.base import user_history_update
+from utils.template_engine import render_template
 
 router = Router()
 
@@ -14,9 +14,10 @@ router = Router()
 @router.callback_query(F.data == 'support')
 async def purchase_selected(callback_query: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(TechSupportState.select_product)
-    await user_history_update(state, TechSupportState.select_product)
+    data = await state.update_data({"branch": "support"})
+    text = render_template('products_list.html', data)
     await callback_query.message.edit_text(
-        text='Now select product: ',
+        text=text,
         reply_markup=get_inline_keyboard_builder(AVAILABLE_PRODUCTS).as_markup()
     )
 
@@ -25,7 +26,6 @@ async def purchase_selected(callback_query: CallbackQuery, state: FSMContext) ->
 async def purchase_product_options(callback_query: CallbackQuery, state: FSMContext) -> None:
     await state.set_state(TechSupportState.product_problems)
     await state.update_data({"product": callback_query.data})
-    await user_history_update(state, TechSupportState.product_problems)
 
     problems = KNOWN_PROBLEMS.get(callback_query.data, [])
     problems_list = '\n'.join(f'{idx}. {problem}' for idx, problem in enumerate(problems, 1))
