@@ -18,7 +18,7 @@ async def purchase_selected(callback_query: CallbackQuery, state: FSMContext) ->
     text = render_template('products_list.html', data)
     await callback_query.message.edit_text(
         text=text,
-        reply_markup=get_inline_keyboard_builder(AVAILABLE_PRODUCTS).as_markup()
+        reply_markup=get_inline_keyboard_builder(AVAILABLE_PRODUCTS, row_col=(1, 1)).as_markup()
     )
 
 
@@ -27,6 +27,7 @@ async def purchase_product_options(callback_query: CallbackQuery, state: FSMCont
     await state.set_state(TechSupportState.product_problems)
     await state.update_data({"product": callback_query.data})
 
+    # TODO make more readable
     problems = KNOWN_PROBLEMS.get(callback_query.data, [])
     problems_list = '\n'.join(f'{idx}. {problem}' for idx, problem in enumerate(problems, 1))
 

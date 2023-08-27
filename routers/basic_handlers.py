@@ -1,9 +1,9 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from constants import AVAILABLE_SERVICES, AVAILABLE_PRODUCTS
+from constants import AVAILABLE_SERVICES, AVAILABLE_PRODUCTS, KNOWN_PROBLEMS, AVILINE_CHAT_ID
 from keyboards import get_inline_keyboard_builder
 from utils.template_engine import render_template
 from states import PurchaseState, TechSupportState, ContactSupportState
@@ -15,7 +15,7 @@ router = Router()
 @router.message(CommandStart())
 async def handle_start(message: Message, state: FSMContext) -> None:
     await state.clear()
-    keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES)
+    keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True)
     text = render_template('start.html')
     await message.answer(
         text=text,
@@ -35,6 +35,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext) -> None:
     # TODO clean mess
     if current_state is not None:
         reverse_template = {
+            ContactSupportState.entry_confirmation: ('client_enter_message.html', ContactSupportState.enter_message),
             ContactSupportState.enter_message: ('client_enter_contact.html', ContactSupportState.enter_contact),
             ContactSupportState.enter_contact: ('client_enter_name.html', ContactSupportState.enter_name),
             ContactSupportState.enter_name: ('products_list.html', PurchaseState.select_product if data['branch'] == 'purchase' else TechSupportState.select_product),
@@ -43,7 +44,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext) -> None:
         }
 
     if current_state is not None and current_state in (reverse_template.keys()):
-        pattern, state_to_set = reverse_template.get(current_state),
+        pattern, state_to_set = reverse_template[current_state]
         print(pattern, state_to_set)
         await state.set_state(state_to_set)
         if pattern == 'products_list.html':
@@ -65,3 +66,21 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext) -> None:
 @router.callback_query()
 async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
     print(f'\033[032mCallback wasted\nCallback.data: {callback.data}\nstate: {await state.get_state()}\033[0m')
+
+
+@router.message()
+async def get_chat_id(message: Message, bot: Bot):
+
+    print(f"{message.message_thread_id = }")
+    res = await bot.delete_message(chat_id=AVILINE_CHAT_ID, message_id=message.message_thread_id)
+    print(f'{res = }')
+    res = await bot.delete_message(chat_id=AVILINE_CHAT_ID, message_id=message.message_id)
+    print(f'{res = }')
+
+    # for attr in dir(message):
+    #     try:
+    #         print(attr)
+    #         print(getattr(message, attr))
+    #         print()
+    #     except Exception as e:
+    #         ...

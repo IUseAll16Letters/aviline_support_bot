@@ -26,6 +26,7 @@ class ContactSupportState(StatesGroup):
     enter_name = State()
     enter_contact = State()
     enter_message = State()
+    entry_confirmation = State()
 
 
 STATES = {}

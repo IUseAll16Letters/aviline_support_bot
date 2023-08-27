@@ -25,6 +25,3 @@ Todo:
 - Readme.md
   - add pictures to describe bot operation logic
   - add pictures to describe bot architecture
-
-- 
-- 

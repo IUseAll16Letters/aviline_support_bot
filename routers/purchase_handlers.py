@@ -18,7 +18,7 @@ async def purchase_selected(callback_query: CallbackQuery, state: FSMContext) ->
     text = render_template('products_list.html', data)
     await callback_query.message.edit_text(
         text=text,
-        reply_markup=get_inline_keyboard_builder(AVAILABLE_PRODUCTS, row_col=(3, 2)).as_markup()
+        reply_markup=get_inline_keyboard_builder(AVAILABLE_PRODUCTS, row_col=(1, 1)).as_markup()
     )
 
 
