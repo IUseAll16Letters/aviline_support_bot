@@ -70,7 +70,15 @@ async def user_sent_valid_contact(message: Message, state: FSMContext):
 
 @router.message(ContactSupportState.enter_contact)
 async def user_sent_invalid_contact(message: Message, state: FSMContext):
-    print('invalid contact')
+    await state.update_data({'user_contact': message.text})
+    data = await state.get_data()
+    core_message: Message = data['message']
+    text = render_template('client_bad_contact.html', values=data)
+    await core_message.edit_text(
+        text=text,
+        reply_markup=get_inline_keyboard_builder().as_markup(),
+    )
+    await message.delete()
 
 
 @router.message(ContactSupportState.enter_message)
