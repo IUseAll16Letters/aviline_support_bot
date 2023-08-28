@@ -36,6 +36,7 @@ async def user_sent_name(message: Message, state: FSMContext):
         text=text,
         reply_markup=get_inline_keyboard_builder().as_markup(),
     )
+    await message.delete()
 
 
 @router.message(ContactSupportState.enter_name)
@@ -46,6 +47,7 @@ async def user_sent_bad_name(message: Message, state: FSMContext):
         text=f'По каким-то приичнам {message.text} - невалидное имя. Попробуйте ещё раз (a-z, а-я)',
         reply_markup=get_inline_keyboard_builder().as_markup(),
     )
+    await message.delete()
 
 
 @router.message(
@@ -63,6 +65,7 @@ async def user_sent_valid_contact(message: Message, state: FSMContext):
         text=text,
         reply_markup=get_inline_keyboard_builder().as_markup(),
     )
+    await message.delete()
 
 
 @router.message(ContactSupportState.enter_contact)
@@ -92,6 +95,7 @@ async def user_message_confirm(message: Message, state: FSMContext):
         text=text,
         reply_markup=get_inline_keyboard_builder([CONFIRMATION_MESSAGE, ]).as_markup(),
     )
+    await message.delete()
 
 
 @router.callback_query(F.data == CONFIRMATION_MESSAGE, ContactSupportState.entry_confirmation)
