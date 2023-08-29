@@ -2,10 +2,10 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 
-from keyboards import get_inline_keyboard_builder
-from states import PurchaseState, BaseState
-from constants import AVAILABLE_PRODUCTS, PRODUCT_DESCRIPTION, AVAILABLE_SERVICES
-from utils.template_engine import render_template
+from tgbot.keyboards import get_inline_keyboard_builder
+from tgbot.states import PurchaseState
+from tgbot.constants import AVAILABLE_PRODUCTS, PRODUCT_DESCRIPTION
+from tgbot.utils.template_engine import render_template
 
 
 router = Router()

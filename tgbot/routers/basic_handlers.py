@@ -1,12 +1,13 @@
-from aiogram import Router, F, Bot
+from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from constants import AVAILABLE_SERVICES, AVAILABLE_PRODUCTS, KNOWN_PROBLEMS, AVILINE_CHAT_ID
-from keyboards import get_inline_keyboard_builder
-from utils.template_engine import render_template
-from states import PurchaseState, TechSupportState, ContactSupportState
+from tgbot.constants import AVAILABLE_SERVICES, AVAILABLE_PRODUCTS, KNOWN_PROBLEMS
+from tgbot.keyboards import get_inline_keyboard_builder
+from tgbot.utils.template_engine import render_template
+from tgbot.utils.base import get_product_problems
+from tgbot.states import PurchaseState, TechSupportState, ContactSupportState
 
 
 router = Router()
@@ -41,6 +42,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext) -> None:
             ContactSupportState.enter_name: ('products_list.html', PurchaseState.select_product if data['branch'] == 'purchase' else TechSupportState.select_product),
             PurchaseState.product_description: ('products_list.html', PurchaseState.select_product),
             TechSupportState.product_problems: ('products_list.html', TechSupportState.select_product),
+            TechSupportState.problem_details: ('product_problems.html', TechSupportState.product_problems),
         }
 
     if current_state is not None and current_state in (reverse_template.keys()):
@@ -49,6 +51,13 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext) -> None:
         await state.set_state(state_to_set)
         if pattern == 'products_list.html':
             keyboard = get_inline_keyboard_builder(AVAILABLE_PRODUCTS)
+        if pattern == 'product_problems.html':
+            problems_list = get_product_problems(data['product'], KNOWN_PROBLEMS)
+            data['problems'], data['enumerate'] = problems_list, enumerate
+            keyboard = get_inline_keyboard_builder(
+                [str(i) for i in range(1, len(data['problems']) + 1)],
+                support_reachable=True,
+            )
     else:
         print('ELSE')
         await state.clear()
@@ -65,17 +74,18 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext) -> None:
 
 @router.callback_query()
 async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
-    print(f'\033[032mCallback wasted\nCallback.data: {callback.data}\nstate: {await state.get_state()}\033[0m')
+    print(f'\033[032mCallback wasted\nCallback.data: {callback.data}\nstate: {await state.get_state()}\033\n'
+          f'data: {await state.get_data()}[0m')
 
 
-@router.message()
-async def get_chat_id(message: Message, bot: Bot):
-
-    print(f"{message.message_thread_id = }")
-    res = await bot.delete_message(chat_id=AVILINE_CHAT_ID, message_id=message.message_thread_id)
-    print(f'{res = }')
-    res = await bot.delete_message(chat_id=AVILINE_CHAT_ID, message_id=message.message_id)
-    print(f'{res = }')
+# @router.message()
+# async def get_chat_id(message: Message, tgbot: Bot):
+#
+#     print(f"{message.message_thread_id = }")
+#     res = await tgbot.delete_message(chat_id=AVILINE_CHAT_ID, message_id=message.message_thread_id)
+#     print(f'{res = }')
+#     res = await tgbot.delete_message(chat_id=AVILINE_CHAT_ID, message_id=message.message_id)
+#     print(f'{res = }')
 
     # for attr in dir(message):
     #     try:

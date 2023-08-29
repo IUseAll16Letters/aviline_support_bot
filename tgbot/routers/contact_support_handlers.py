@@ -4,12 +4,12 @@ from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-from keyboards import get_inline_keyboard_builder
-from states import ContactSupportState
-from constants import CLEAN_PHONE_PATTERN, GET_PHONE_PATTERN, GET_EMAIL_PATTERN, GET_NAME_PATTERN, \
+from tgbot.keyboards import get_inline_keyboard_builder
+from tgbot.states import ContactSupportState
+from tgbot.constants import CLEAN_PHONE_PATTERN, GET_PHONE_PATTERN, GET_EMAIL_PATTERN, GET_NAME_PATTERN, \
     CONFIRMATION_MESSAGE, AVILINE_CHAT_ID
-from utils.base import get_client_message, get_client_media
-from utils.template_engine import render_template
+from tgbot.utils.base import get_client_message, get_client_media
+from tgbot.utils.template_engine import render_template
 
 router = Router()
 
@@ -89,7 +89,7 @@ async def user_message_confirm(message: Message, state: FSMContext):
     # print(f'{message.entities = }')
     # print(f'{message.caption = }')
     # print(f'{message.document = }')
-    print(f'{message.photo = } {message.photo[0].file_id = }')
+    # print(f'{message.photo = } {message.photo[0].file_id = }')
     # print(f'{message.video = }')
     # print(f'{message.animation = }')
     # print(f'{message.audio = }')
@@ -112,11 +112,12 @@ async def user_confirmed_the_message(callback_query: CallbackQuery, state: FSMCo
     data = await state.get_data()
     for k, v in data.items():
         print(f'{k = }, {v = }')
-
+    data['user_id'] = callback_query.from_user.id
     user_message = f"from_user: {data['username']}" \
                    f"user_contact: {data['user_contact']}" \
                    f"message: {data['user_message']}"
 
+    # TODO re-implement logic
     if data.get('user_media') is not None:
         new_user_caption = f"from_user: {data['username']}\n" \
                            f"user_contact: {data['user_contact']}\n" \
@@ -130,8 +131,10 @@ async def user_confirmed_the_message(callback_query: CallbackQuery, state: FSMCo
         print(f"User message id {message.message_id = }")
     else:
         await bot.send_message(chat_id=AVILINE_CHAT_ID, text=user_message)
+
     core_message: Message = data['message']
     await core_message.edit_text(
-        text='Now you can return',
+        text=render_template('message_sent_success.html', values=data),
         reply_markup=get_inline_keyboard_builder().as_markup(),
     )
+    await state.clear()

@@ -4,9 +4,9 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from configs import TOKEN
-from utils.base import on_startup, on_shutdown
-from routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers
+from tgbot.configs import TOKEN
+from tgbot.utils.base import on_startup, on_shutdown
+from tgbot.routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers
 
 
 logging.basicConfig(level=logging.INFO)

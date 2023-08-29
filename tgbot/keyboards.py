@@ -19,7 +19,7 @@ def get_inline_keyboard_builder(
         builder.row(InlineKeyboardButton(text="Остались вопросы? Задайте их нам напрямую:",
                                          callback_data='contact_support'))
     if not is_initial:
-        builder.row(InlineKeyboardButton(text="<< back", callback_data='back'))
+        builder.row(InlineKeyboardButton(text="<< Назад", callback_data='back'))
 
     return builder
 

@@ -20,6 +20,7 @@ class ProductDetails(PurchaseState):
 class TechSupportState(BaseState):
     select_product = State()
     product_problems = State()
+    problem_details = State()
 
 
 class ContactSupportState(StatesGroup):
@@ -27,6 +28,3 @@ class ContactSupportState(StatesGroup):
     enter_contact = State()
     enter_message = State()
     entry_confirmation = State()
-
-
-STATES = {}

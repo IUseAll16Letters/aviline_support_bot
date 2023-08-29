@@ -1,7 +1,7 @@
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-from constants import TEMPLATES
+from tgbot.constants import TEMPLATES
 
 
 env = Environment(

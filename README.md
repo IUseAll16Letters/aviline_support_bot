@@ -7,6 +7,8 @@ Implemented:
 - (router) start -> buy / support -> contact_us
 
 Todo:
+- Overall
+  - Clean code, you lazy pal!
 - Admin:
   - connect django_admin, to manage the products from web
   - connect database instead of pyfile
@@ -14,11 +16,11 @@ Todo:
   - implement through pydantic
   - add python_loadenv
 - Constants:
-  - Add email verification regexp
+  - Add email verification regexp ✅
   - revise constants file
 - Templates:
-  - Implement templates through Jinja2
-  - Develop the templates visual design
+  - Develop the templates visual design ✅
+  - Implement templates through Jinja2 ✅
 - Navigation:
   - monkey test bot operation from scratch
   - implement reversing (<< back) logics
