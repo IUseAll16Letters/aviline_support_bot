@@ -53,3 +53,12 @@ GET_PHONE_PATTERN = r'\d{7,11}'
 GET_EMAIL_PATTERN = r'(\w+\.)*\w+@([a-zA-Z]+\.)+[a-zA-Z]{2,}'
 
 CONFIRMATION_MESSAGE = '✅ да'
+
+#
+# PROD_KEY = {k: idx for idx, k in enumerate(KNOWN_PROBLEMS.keys(), 1)}
+#
+#
+# for k, v in KNOWN_PROBLEMS.items():
+#     key = PROD_KEY.get(k)
+#     for problem, solution in v:
+#         print(f"('{problem}', '{solution}', {key}, DATETIME('now'), DATETIME('now')),")
