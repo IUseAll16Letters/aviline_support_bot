@@ -12,7 +12,11 @@ router = Router()
 
 
 @router.callback_query(F.data == 'support')
-async def support_selected(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession) -> None:
+async def support_selected(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        db_session: AsyncSession
+) -> None:
     await state.set_state(TechSupportState.select_product)
     data = await state.update_data({"branch": "support"})
     text = render_template('products_list.html', data)
@@ -26,7 +30,11 @@ async def support_selected(callback_query: CallbackQuery, state: FSMContext, db_
 
 
 @router.callback_query(F.data != 'back', TechSupportState.select_product)
-async def get_product_problems_handler(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession) -> None:
+async def get_product_problems_handler(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        db_session: AsyncSession
+) -> None:
     await state.set_state(TechSupportState.product_problems)
     data = await state.update_data({"product": callback_query.data})
     problems = await get_product_problems(db_session, callback_query.data)
@@ -45,7 +53,11 @@ async def get_product_problems_handler(callback_query: CallbackQuery, state: FSM
 
 
 @router.callback_query(F.data.regexp(r'\d+'), TechSupportState.product_problems)
-async def get_problem_solution_by_number(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession):
+async def get_problem_solution_by_number(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        db_session: AsyncSession
+) -> None:
     await state.set_state(TechSupportState.problem_details)
     data = await state.get_data()
     solution = await get_problem_solution(db_session, data['product'], int(callback_query.data) - 1)

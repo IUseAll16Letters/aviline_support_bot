@@ -1,6 +1,6 @@
 __all__ = ("render_template", )
 
-from typing import Any
+from typing import Any, Dict, Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from config.settings import TG_BOT_TEMPLATES
@@ -12,7 +12,7 @@ env = Environment(
 )
 
 
-def render_template(template_name: str, values: dict[str, Any] | None = None, **kwargs) -> str:
+def render_template(template_name: str, values: Optional[Dict[str, Any]] = None, **kwargs) -> str:
     template = env.get_template(template_name)
 
     if values:

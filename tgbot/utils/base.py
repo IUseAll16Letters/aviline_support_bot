@@ -1,20 +1,22 @@
 __all__ = ("edit_base_message", "get_client_message", "get_client_media",
            "on_startup", "on_shutdown")
 
+from typing import Optional
+
 from aiogram import Bot
 from aiogram.types import Message
 from aiogram.utils.keyboard import KeyboardBuilder
 
 
-async def on_startup(bot: Bot):
+async def on_startup(bot: Bot) -> None:
     print('starting', bot)
 
 
-async def on_shutdown(bot: Bot):
+async def on_shutdown(bot: Bot) -> None:
     print('Stopping', bot)
 
 
-async def edit_base_message(message: Message, text: str, keyboard: KeyboardBuilder):
+async def edit_base_message(message: Message, text: str, keyboard: KeyboardBuilder) -> None:
     """
     :param message: Aiogram Message, base message to update text + inline keyboard
     :param text: jinja2 rendered template as str (or any str)
@@ -29,7 +31,7 @@ async def edit_base_message(message: Message, text: str, keyboard: KeyboardBuild
     )
 
 
-def get_client_message(message: Message):
+def get_client_message(message: Message) -> None:
     """Get client message text based on message type (has or hasn't any media attached)"""
     user_message = ""
     user_message = message.text or user_message
@@ -37,7 +39,7 @@ def get_client_message(message: Message):
     return user_message
 
 
-def get_client_media(message: Message):
+def get_client_media(message: Message) -> Optional[str]:
     """Get client media attached if there are any"""
     try:
         media_sources = ['']
