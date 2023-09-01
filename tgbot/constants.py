@@ -1,16 +1,10 @@
-from pathlib import Path
-
-BOT_ROOT_PATH = Path(__file__).parent
-TEMPLATES = BOT_ROOT_PATH / 'templates'
-ENV_PATH = BOT_ROOT_PATH / '.env'
-
 AVILINE_CHAT_ID = -1001948597816
+
+# -- Depricated --
 AVAILABLE_SERVICES = ['purchase', 'support']
 AVAILABLE_PRODUCTS = ['видеорегистратор', 'электропривод багажника', 'парковочные системы', 'камера заднего вида',
                       'система контроля слепых зон', 'CANA-PRO']
-
 PRODUCT_DESCRIPTION = ['versions', 'price', 'details', 'manual']
-
 KNOWN_PROBLEMS = {
     'видеорегистратор': [
         ('На экране надпись AVILINE',
@@ -45,6 +39,7 @@ KNOWN_PROBLEMS = {
         ('Какой-то вопрос по камере', "https://youtube.com/watch?v=dQw4w9WgXcQ"),
     ],
 }
+# -- Depricated --
 
 GET_NAME_PATTERN = r'([a-zа-яA-ZА-Я]+[-\s.]*)*[a-zа-яA-ZА-Я]{2,}$'
 
@@ -53,12 +48,3 @@ GET_PHONE_PATTERN = r'\d{7,11}'
 GET_EMAIL_PATTERN = r'(\w+\.)*\w+@([a-zA-Z]+\.)+[a-zA-Z]{2,}'
 
 CONFIRMATION_MESSAGE = '✅ да'
-
-#
-# PROD_KEY = {k: idx for idx, k in enumerate(KNOWN_PROBLEMS.keys(), 1)}
-#
-#
-# for k, v in KNOWN_PROBLEMS.items():
-#     key = PROD_KEY.get(k)
-#     for problem, solution in v:
-#         print(f"('{problem}', '{solution}', {key}, DATETIME('now'), DATETIME('now')),")

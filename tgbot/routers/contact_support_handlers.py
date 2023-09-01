@@ -8,44 +8,57 @@ from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import ContactSupportState
 from tgbot.constants import CLEAN_PHONE_PATTERN, GET_PHONE_PATTERN, GET_EMAIL_PATTERN, GET_NAME_PATTERN, \
     CONFIRMATION_MESSAGE, AVILINE_CHAT_ID
-from tgbot.utils.base import get_client_message, get_client_media
-from tgbot.utils.template_engine import render_template
+from tgbot.utils import render_template, get_client_message, get_client_media, edit_base_message
 
 router = Router()
 
 
 @router.callback_query(F.data == 'contact_support')
-async def contact_support_initial_message(callback_query: CallbackQuery, state: FSMContext) -> None:
+async def user_enters_name(callback_query: CallbackQuery, state: FSMContext) -> None:
+    """Contact support initial message, client must enter valid name
+    state before: Any
+    state after: Contact -> enter_name
+    after message input - it must be removed in order to save client's chat space and convenience"""
     data = await state.update_data({"message": callback_query.message})
     await state.set_state(ContactSupportState.enter_name)
     text = render_template('client_enter_name.html', values=data)
-    await callback_query.message.edit_text(
+    await edit_base_message(
+        message=callback_query.message,
         text=text,
-        reply_markup=get_inline_keyboard_builder().as_markup(),
+        keyboard=get_inline_keyboard_builder()
     )
 
 
 @router.message(F.text.regexp(GET_NAME_PATTERN), ContactSupportState.enter_name)
-async def user_sent_name(message: Message, state: FSMContext):
+async def user_enters_contact(message: Message, state: FSMContext):
+    """Client must enter valid contact (email/phone)
+    state before: Contact -> enter_name
+    state after: Contact -> enter_name -> enter_contact
+    after message input - it must be removed in order to save client's chat space and convenience"""
     await state.set_state(ContactSupportState.enter_contact)
     data = await state.update_data({"username": message.text})
     state_data = await state.get_data()
     core_message: Message = state_data['message']
     text = render_template('client_enter_contact.html', values=data)
-    await core_message.edit_text(
+    await edit_base_message(
+        message=core_message,
         text=text,
-        reply_markup=get_inline_keyboard_builder().as_markup(),
+        keyboard=get_inline_keyboard_builder(),
     )
     await message.delete()
 
 
 @router.message(ContactSupportState.enter_name)
 async def user_sent_bad_name(message: Message, state: FSMContext):
+    """Client enter invalid name that has numbers or symbols
+    FIGURE OUT IF IT IS NEEDED AT ALL"""
     state_data = await state.get_data()
     core_message: Message = state_data['message']
-    await core_message.edit_text(
-        text=f'По каким-то приичнам {message.text} - невалидное имя. Попробуйте ещё раз (a-z, а-я)',
-        reply_markup=get_inline_keyboard_builder().as_markup(),
+    text = f'По каким-то приичнам {message.text} - невалидное имя. Попробуйте ещё раз (a-z, а-я)'
+    await edit_base_message(
+        message=core_message,
+        text=text,
+        keyboard=get_inline_keyboard_builder(),
     )
     await message.delete()
 
@@ -56,14 +69,19 @@ async def user_sent_bad_name(message: Message, state: FSMContext):
     F.text.func(lambda s: re.search(GET_EMAIL_PATTERN, s.strip()) is not None),
 )
 async def user_sent_valid_contact(message: Message, state: FSMContext):
+    """Client must enter valid contact (email/phone)
+    state before: Contact -> enter_name -> enter_contact
+    state after: Contact -> enter_name -> enter_contact -> enter_message
+    """
     await state.set_state(ContactSupportState.enter_message)
     await state.update_data({'user_contact': message.text})
     data = await state.get_data()
     core_message: Message = data['message']
     text = render_template('client_enter_message.html', values=data)
-    await core_message.edit_text(
+    await edit_base_message(
+        message=core_message,
         text=text,
-        reply_markup=get_inline_keyboard_builder().as_markup(),
+        keyboard=get_inline_keyboard_builder(),
     )
     await message.delete()
 
@@ -74,15 +92,20 @@ async def user_sent_invalid_contact(message: Message, state: FSMContext):
     data = await state.get_data()
     core_message: Message = data['message']
     text = render_template('client_bad_contact.html', values=data)
-    await core_message.edit_text(
+    await edit_base_message(
+        message=core_message,
         text=text,
-        reply_markup=get_inline_keyboard_builder().as_markup(),
+        keyboard=get_inline_keyboard_builder(),
     )
     await message.delete()
 
 
 @router.message(ContactSupportState.enter_message)
 async def user_message_confirm(message: Message, state: FSMContext):
+    """Confirmation of clients input data
+        state before: Contact -> enter_name -> enter_contact -> enter_message
+        state after: Contact -> enter_name -> enter_contact -> enter_message -> entry_confirmation
+    """
     await state.set_state(ContactSupportState.entry_confirmation)
     # print(f'{message = }')
     # print(f'{message.caption_entities = }')
@@ -99,15 +122,18 @@ async def user_message_confirm(message: Message, state: FSMContext):
 
     core_message: Message = data['message']
     text = render_template('client_message_sent.html', values=data)
-    await core_message.edit_text(
+    await edit_base_message(
+        message=core_message,
         text=text,
-        reply_markup=get_inline_keyboard_builder([CONFIRMATION_MESSAGE, ]).as_markup(),
+        keyboard=get_inline_keyboard_builder([CONFIRMATION_MESSAGE, ]),
     )
+
     await message.delete()
 
 
 @router.callback_query(F.data == CONFIRMATION_MESSAGE, ContactSupportState.entry_confirmation)
 async def user_confirmed_the_message(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
+    """Client has finished entering message, message is sent - show notification message"""
     print('User confirmed his choice, redirect to global chat')
     data = await state.get_data()
     for k, v in data.items():
@@ -133,8 +159,11 @@ async def user_confirmed_the_message(callback_query: CallbackQuery, state: FSMCo
         await bot.send_message(chat_id=AVILINE_CHAT_ID, text=user_message)
 
     core_message: Message = data['message']
-    await core_message.edit_text(
-        text=render_template('message_sent_success.html', values=data),
-        reply_markup=get_inline_keyboard_builder().as_markup(),
+    text = render_template('message_sent_success.html', values=data)
+    await edit_base_message(
+        message=core_message,
+        text=text,
+        keyboard=get_inline_keyboard_builder(),
     )
+
     await state.clear()

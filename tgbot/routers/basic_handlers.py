@@ -2,12 +2,13 @@ from aiogram import Router, F
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.constants import AVAILABLE_SERVICES, AVAILABLE_PRODUCTS, KNOWN_PROBLEMS
+from tgbot.constants import AVAILABLE_SERVICES
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils.template_engine import render_template
-from tgbot.utils.base import get_product_problems
 from tgbot.states import PurchaseState, TechSupportState, ContactSupportState
+from tgbot.crud import get_all_products, get_product_problems
 
 
 router = Router()
@@ -15,7 +16,8 @@ router = Router()
 
 @router.message(CommandStart())
 async def handle_start(message: Message, state: FSMContext) -> None:
-    await state.clear()
+    """/start command handler, no state, no db_access"""
+    # await state.clear()
     keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True)
     text = render_template('start.html')
     await message.answer(
@@ -25,15 +27,19 @@ async def handle_start(message: Message, state: FSMContext) -> None:
 
 
 @router.callback_query(F.data == 'back')
-async def move_back(callback_query: CallbackQuery, state: FSMContext) -> None:
+async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession) -> None:
+    """
+    Navigation reversing logic that hooks "back" callback_query based on states and templates related to current state.
+    Returns to base welcome message (/start) in case no state set.
+    !! VERY BAD IMPLMENTATION THAT NONETHELESS WORKS, BUT MUST BE REWORKED !!
+    """
     current_state = await state.get_state()
     print(f'BACK from: {current_state = }')
     data = await state.get_data()
     print(data)
     # TODO enter_name состояние должно возвращать пользователя к вопросу, с которого он перешел
-
     keyboard = get_inline_keyboard_builder()
-    # TODO clean mess
+    # TODO clean this mess
     if current_state is not None:
         reverse_template = {
             ContactSupportState.entry_confirmation: ('client_enter_message.html', ContactSupportState.enter_message),
@@ -47,13 +53,12 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext) -> None:
 
     if current_state is not None and current_state in (reverse_template.keys()):
         pattern, state_to_set = reverse_template[current_state]
-        print(pattern, state_to_set)
         await state.set_state(state_to_set)
         if pattern == 'products_list.html':
-            keyboard = get_inline_keyboard_builder(AVAILABLE_PRODUCTS)
+            keyboard = get_inline_keyboard_builder(await get_all_products(db_session))
         if pattern == 'product_problems.html':
-            problems_list = get_product_problems(data['product'], KNOWN_PROBLEMS)
-            data['problems'], data['enumerate'] = problems_list, enumerate
+            problems = await get_product_problems(db_session=db_session, product=data["product"])
+            data['problems'], data['enumerate'] = problems, enumerate
             keyboard = get_inline_keyboard_builder(
                 [str(i) for i in range(1, len(data['problems']) + 1)],
                 support_reachable=True,
@@ -74,23 +79,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext) -> None:
 
 @router.callback_query()
 async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
+    """Trash handler when no other work (for debug and log purpose)
+    shoudl raise error in future"""
     print(f'\033[032mCallback wasted\nCallback.data: {callback.data}\nstate: {await state.get_state()}\033\n'
           f'data: {await state.get_data()}[0m')
-
-
-# @router.message()
-# async def get_chat_id(message: Message, tgbot: Bot):
-#
-#     print(f"{message.message_thread_id = }")
-#     res = await tgbot.delete_message(chat_id=AVILINE_CHAT_ID, message_id=message.message_thread_id)
-#     print(f'{res = }')
-#     res = await tgbot.delete_message(chat_id=AVILINE_CHAT_ID, message_id=message.message_id)
-#     print(f'{res = }')
-
-    # for attr in dir(message):
-    #     try:
-    #         print(attr)
-    #         print(getattr(message, attr))
-    #         print()
-    #     except Exception as e:
-    #         ...
