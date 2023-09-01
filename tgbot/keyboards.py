@@ -1,11 +1,11 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from aiogram.utils.keyboard import KeyboardBuilder
 from aiogram.types import InlineKeyboardButton
 
 
 def get_inline_keyboard_builder(
-        iterable: List[str] | None = None,
+        iterable: Optional[List[str]] = None,
         is_initial: bool = False,
         row_col: Tuple[int, int] = (2, 1),
         support_reachable: bool = False,

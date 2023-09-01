@@ -4,3 +4,4 @@ jinja2
 django==4.2.0
 django-extensions
 aiosqlite
+sqlalchemy
