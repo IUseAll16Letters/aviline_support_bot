@@ -83,3 +83,18 @@ async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
     shoudl raise error in future"""
     print(f'\033[032mCallback wasted\nCallback.data: {callback.data}\nstate: {await state.get_state()}\033\n'
           f'data: {await state.get_data()}[0m')
+
+
+@router.message()
+async def wasted_message(message: Message, state: FSMContext, db_session: AsyncSession) -> None:
+    print(f"\033[32m{message.message_id = }\033[0m")
+    print(f'{message.group = }')
+    print(f'{message.media_group_id = }')
+    print(f'{message.photo = }')
+    print(f'{message.photo.__class__ = }')
+    print(f'{message.document = }')
+    print(f'{message.document.__class__ = }')
+    print(f'{message.video = }')
+    print(f'{message.video.__class__ = }')
+    print(f'{message.caption = }')
+    print('*' * 25)

@@ -25,3 +25,10 @@ class ProductProblem(CreateUpdateProxy):
 
     def __str__(self):
         return f'{self.product.name} {self.title}'
+
+
+class Ticket(CreateUpdateProxy):
+    question = models.TextField(blank=False, null=False)
+    attached_media = models.FileField()
+
+    is_solved = models.BooleanField(default=False)
