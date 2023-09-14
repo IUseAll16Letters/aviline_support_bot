@@ -1,0 +1,3 @@
+partition = select(
+    B, func.row_number().over(order_by=B.id, partition_by=B.a_id).label("index")
+).alias()
