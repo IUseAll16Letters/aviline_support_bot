@@ -28,7 +28,14 @@ class ProductProblem(CreateUpdateProxy):
 
 
 class Ticket(CreateUpdateProxy):
+    customer = models.PositiveBigIntegerField()
     question = models.TextField(blank=False, null=False)
-    attached_media = models.FileField()
 
     is_solved = models.BooleanField(default=False)
+
+
+class TicketMedia(CreateUpdateProxy):
+    telegram_id = models.PositiveBigIntegerField(blank=False, null=False)
+    media_type = models.IntegerField(blank=False, null=False)
+
+    ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE)

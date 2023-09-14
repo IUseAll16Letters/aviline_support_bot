@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Product, ProductProblem
+from .models import Product, ProductProblem, Ticket, TicketMedia
 
 
 @admin.register(Product)
@@ -22,3 +22,8 @@ class ProductProblemAdmin(admin.ModelAdmin):
 
     list_select_related = ["product"]
     ordering = ["product__id", "pk"]
+
+
+@admin.register(Ticket)
+class TicketAdmin(admin.ModelAdmin):
+    ...

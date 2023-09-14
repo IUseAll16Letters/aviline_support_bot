@@ -12,10 +12,11 @@ from tgbot.crud import get_all_products, get_product_problems
 
 
 router = Router()
+D = dict()
 
 
 @router.message(CommandStart())
-async def handle_start(message: Message, state: FSMContext) -> None:
+async def handle_start(message: Message) -> None:
     """/start command handler, no state, no db_access"""
     # await state.clear()
     keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True)
@@ -87,14 +88,20 @@ async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
 
 @router.message()
 async def wasted_message(message: Message, state: FSMContext, db_session: AsyncSession) -> None:
-    print(f"\033[32m{message.message_id = }\033[0m")
-    print(f'{message.group = }')
-    print(f'{message.media_group_id = }')
-    print(f'{message.photo = }')
-    print(f'{message.photo.__class__ = }')
-    print(f'{message.document = }')
-    print(f'{message.document.__class__ = }')
-    print(f'{message.video = }')
-    print(f'{message.video.__class__ = }')
+
+    print(message.video, message.photo, message.document.mime_type)
+
+    # print(f'{message.date = }')
+    # print(f'{message.from_user.id = }')
+    # print(f"\033[32m{message.message_id = }\033[0m")
+    # print(f"\033[32m{message.text = }\033[0m")
+    # print(f'{message.media_group_id = }')
+    # print(f'{message.photo = }')
+    # print(f'{message.photo.__class__ = }')
+    # print(f'{message.document = }')
+    # print(f'{message.document.__class__ = }')
+    # print(f'{message.video = }')
+    # print(f'{message.video.__class__ = }')
     print(f'{message.caption = }')
     print('*' * 25)
+    print(f'\033[35m answered {message.message_id}\033[0m')

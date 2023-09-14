@@ -1,9 +1,25 @@
-from sqlalchemy import Integer, Column
+__all__ = ("Ticket", )
 
-from .base import Base
+from typing import List
+
+from sqlalchemy import Integer, Column, String, BigInteger, Text, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from .base import Base, TimeStampMixin
 
 
-# class Tickets(Base):
-#     __tablename__ = 'aviline_ticket'
-#
-#     id = Column(Integer(), primary_key=True, index=True)
+class Ticket(Base, TimeStampMixin):
+    __tablename__ = 'aviline_ticket'
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    customer: Mapped[int] = mapped_column(BigInteger(), index=True, nullable=False)
+    question: Mapped[str] = mapped_column(Text(), nullable=False)
+
+    is_solved: Mapped[bool] = mapped_column(Boolean(), default=False)
+
+    medias: Mapped[List["TicketMedia"]] = relationship(
+        back_populates="ticket", cascade="all, delete-orphan",
+    )
+
+    def __repr__(self):
+        return f'Ticket(id={self.id!r}, name={self.question!r}, solved={self.is_solved!r})'

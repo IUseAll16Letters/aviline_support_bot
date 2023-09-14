@@ -2,9 +2,10 @@ __all__ = ("ProductProblem", )
 
 
 from sqlalchemy import Integer, Column, String, Boolean, BigInteger, Text, DateTime, func, ForeignKey
-from sqlalchemy.orm import relationship, mapped_column
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from .base import Base, TimeStampMixin
+from . import Product
 
 
 class ProductProblem(Base, TimeStampMixin):
@@ -26,9 +27,12 @@ class ProductProblem(Base, TimeStampMixin):
     """
     __tablename__ = 'aviline_productproblem'
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(length=255), nullable=True)
-    solution = Column(Text(length=255), nullable=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    solution: Mapped[str] = mapped_column(Text(), nullable=False)
+    product_id: Mapped[int] = mapped_column(ForeignKey("aviline_product.id"))
 
-    product_id = mapped_column(ForeignKey("aviline_product.id"))
+    product: Mapped["Product"] = relationship(back_populates="problems")
 
+    def __repr__(self):
+        return F"Prod_Problem(id={self.id!r}, title={self.title[:10]})"
