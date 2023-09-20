@@ -1,11 +1,10 @@
 __all__ = ("edit_base_message", "get_client_message", "parse_message_media",
            "on_startup", "on_shutdown", "add_caption_to_media", "get_media_type")
 
-from typing import Optional, Union, Tuple, List
+from typing import Optional, Tuple, List
 
 from aiogram import Bot
-from aiogram.types import Message, InputMediaVideo, InputMediaPhoto, InputMediaDocument, InputMediaAudio, \
-    InputMediaAnimation
+from aiogram.types import Message, InputMediaVideo, InputMediaPhoto, InputMediaDocument, InputMediaAudio
 from aiogram.utils.keyboard import KeyboardBuilder
 
 from tgbot.constants import MIME_TYPES_ALLOWED, MEDIA_TYPES

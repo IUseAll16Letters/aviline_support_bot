@@ -1,7 +1,7 @@
 __all__ = ("create_ticket", "create_user_media_attached", "create_ticket_message", "get_customer_id_from_message",
            "close_ticket")
 
-from typing import Union
+from typing import Union, List
 from datetime import datetime
 
 from aiogram.types import InputMediaPhoto, InputMediaVideo, Message, InputMediaDocument, InputMediaAudio
@@ -28,7 +28,7 @@ async def create_ticket(
 
 async def create_user_media_attached(
         db_session: AsyncSession,
-        media: list[Union[InputMediaPhoto, InputMediaVideo, InputMediaAudio, InputMediaDocument]],
+        media: List[Union[InputMediaPhoto, InputMediaVideo, InputMediaAudio, InputMediaDocument]],
         ticket_id: int,
 ) -> None:
     medias = [
@@ -44,7 +44,7 @@ async def create_user_media_attached(
 
 
 async def create_ticket_message(
-        db_session: AsyncSession, messages: list[Message], ticket_id: int
+        db_session: AsyncSession, messages: List[Message], ticket_id: int
 ) -> None:
     messages = [
         {
