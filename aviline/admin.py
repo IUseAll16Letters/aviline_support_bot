@@ -13,15 +13,15 @@ class ProductAdmin(admin.ModelAdmin):
     ordering = ['pk']
 
 
-# @admin.register(ProductProblem)
-# class ProductProblemAdmin(admin.ModelAdmin):
-#     list_display = ["pk", "title", "product", "created_at"]
-#     list_display_links = ["pk", "title", "product"]
-#     readonly_fields = ["created_at", "updated_at"]
-#     search_fields = ["title", "product__name"]
-#
-#     list_select_related = ["product"]
-#     ordering = ["product__id", "pk"]
+@admin.register(ProductProblem)
+class ProductProblemAdmin(admin.ModelAdmin):
+    list_display = ["pk", "title", "product", "created_at"]
+    list_display_links = ["pk", "title", "product"]
+    readonly_fields = ["created_at", "updated_at"]
+    search_fields = ["title", "product__name"]
+
+    list_select_related = ["product"]
+    ordering = ["product__id", "pk"]
 
 
 @admin.register(Ticket)
