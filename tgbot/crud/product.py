@@ -1,4 +1,4 @@
-__all__ = ("get_all_products", )
+__all__ = ("get_all_products", "get_product_details")
 
 from sqlalchemy import select, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,3 +15,7 @@ async def get_all_products(db_session: AsyncSession) -> Sequence:
     result = await db_session.execute(stmt)
 
     return result.scalars().all()
+
+
+async def get_product_details(db_session: AsyncSession) -> Sequence:
+    ...

@@ -9,6 +9,7 @@ from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils.template_engine import render_template
 from tgbot.states import PurchaseState, TechSupportState, ContactSupportState
 from tgbot.crud import get_all_products, get_product_problems
+from tgbot.navigation import Navigation, template_from_state
 
 
 router = Router()
@@ -32,48 +33,33 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
     """
     Navigation reversing logic that hooks "back" callback_query based on states and templates related to current state.
     Returns to base welcome message (/start) in case no state set.
-    !! VERY BAD IMPLMENTATION THAT NONETHELESS WORKS, BUT MUST BE REWORKED !!
+    Node tree implementation using dfs with states as Node value and next/prev as parent/child Nodes
     """
     current_state = await state.get_state()
-    print(f'BACK from: {current_state = }')
     data = await state.get_data()
-    print(data)
-    # TODO enter_name состояние должно возвращать пользователя к вопросу, с которого он перешел
-    keyboard = get_inline_keyboard_builder()
-    # TODO clean this mess
-    if current_state is not None:
-        reverse_template = {
-            ContactSupportState.entry_confirmation: ('client_enter_message.html', ContactSupportState.enter_message),
-            ContactSupportState.enter_message: ('client_enter_contact.html', ContactSupportState.enter_contact),
-            ContactSupportState.enter_contact: ('client_enter_name.html', ContactSupportState.enter_name),
-            ContactSupportState.enter_name: ('products_list.html', PurchaseState.select_product if data['branch'] == 'purchase' else TechSupportState.select_product),
-            PurchaseState.product_description: ('products_list.html', PurchaseState.select_product),
-            TechSupportState.product_problems: ('products_list.html', TechSupportState.select_product),
-            TechSupportState.problem_details: ('product_problems.html', TechSupportState.product_problems),
-        }
+    reverse_state = Navigation.find(current_state).reverse_state(data.get("branch"))  # get node, get node parent
 
-    if current_state is not None and current_state in (reverse_template.keys()):
-        pattern, state_to_set = reverse_template[current_state]
-        await state.set_state(state_to_set)
-        if pattern == 'products_list.html':
-            keyboard = get_inline_keyboard_builder(await get_all_products(db_session))
-        if pattern == 'product_problems.html':
-            problems = await get_product_problems(db_session=db_session, product=data["product"])
-            data['problems'], data['enumerate'] = problems, enumerate
-            keyboard = get_inline_keyboard_builder(
-                [str(i) for i in range(1, len(data['problems']) + 1)],
-                support_reachable=True,
-            )
-    else:
-        print('ELSE')
+    keyboard = get_inline_keyboard_builder()
+    template = template_from_state[reverse_state]
+
+    if template == 'products_list.html':
+        keyboard = get_inline_keyboard_builder(await get_all_products(db_session))
+
+    elif template == 'product_problems.html':
+        problems = await get_product_problems(db_session=db_session, product=data["product"])
+        data['problems'], data['enumerate'] = problems, enumerate
+        keyboard = get_inline_keyboard_builder(
+            [str(i) for i in range(1, len(data['problems']) + 1)],
+            support_reachable=True)
+
+    if reverse_state is None:
         await state.clear()
         keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True)
-        pattern = 'start.html'
-
-    await callback_query.answer(text="Not yet implemented, but your data is clear")
+    else:
+        await state.set_state(reverse_state)
 
     await callback_query.message.edit_text(
-        text=render_template(pattern, values=data),
+        text=render_template(template, values=data),
         reply_markup=keyboard.as_markup(),
     )
 
@@ -88,20 +74,18 @@ async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
 
 @router.message()
 async def wasted_message(message: Message, state: FSMContext, db_session: AsyncSession) -> None:
+    print(message.reply_to_message, message.chat.id)
+    if message.reply_to_message:
+        print(message.reply_to_message.message_id)
 
-    print(message.video, message.photo, message.document.mime_type)
-
-    # print(f'{message.date = }')
-    # print(f'{message.from_user.id = }')
-    # print(f"\033[32m{message.message_id = }\033[0m")
-    # print(f"\033[32m{message.text = }\033[0m")
-    # print(f'{message.media_group_id = }')
-    # print(f'{message.photo = }')
-    # print(f'{message.photo.__class__ = }')
-    # print(f'{message.document = }')
-    # print(f'{message.document.__class__ = }')
-    # print(f'{message.video = }')
-    # print(f'{message.video.__class__ = }')
-    print(f'{message.caption = }')
-    print('*' * 25)
-    print(f'\033[35m answered {message.message_id}\033[0m')
+    print('\033[35;4m***\033[0m', message)
+    from tgbot.utils import parse_message_media
+    if any((message.photo, message.video,
+            message.audio, message.document,
+            message.video_note, message.voice)):
+        print('caught media')
+        media_is_document, new_media_object = parse_message_media(message)
+        print(f'{media_is_document = }')
+        print(new_media_object)
+    else:
+        print(message)

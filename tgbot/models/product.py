@@ -2,8 +2,8 @@ __all__ = ("Product", )
 
 from typing import List
 
-from sqlalchemy import Integer, Column, String, Boolean, BigInteger, Text, DateTime, func
-from sqlalchemy.orm import Mapped, relationship, mapped_column
+from sqlalchemy import String, Text, Boolean
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimeStampMixin
 
@@ -26,8 +26,9 @@ class Product(Base, TimeStampMixin):
     __tablename__ = 'aviline_product'
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[str] = mapped_column(Text(), nullable=False)
+    name: Mapped[str] = mapped_column(String(150), nullable=False, unique=True)
+    description: Mapped[str] = mapped_column(Text(), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean(), default=True, nullable=False)
 
     problems: Mapped[List["ProductProblem"]] = relationship(
         back_populates="product", cascade="all, delete-orphan",

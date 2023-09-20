@@ -1,11 +1,10 @@
 __all__ = ("ProductProblem", )
 
 
-from sqlalchemy import Integer, Column, String, Boolean, BigInteger, Text, DateTime, func, ForeignKey
+from sqlalchemy import String, Text, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from .base import Base, TimeStampMixin
-from . import Product
 
 
 class ProductProblem(Base, TimeStampMixin):

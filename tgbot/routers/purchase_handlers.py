@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import PurchaseState
-from tgbot.constants import AVAILABLE_PRODUCTS, PRODUCT_DESCRIPTION
 from tgbot.utils import render_template, edit_base_message
 from tgbot.crud import get_all_products
 
@@ -27,14 +26,17 @@ async def purchase_selected(callback_query: CallbackQuery, state: FSMContext, db
     )
 
 
-@router.callback_query(F.data != 'back', PurchaseState.select_product)
+@router.callback_query(F.data != "back", PurchaseState.select_product)  # TODO Achtung, tyt kostil!
 async def purchase_product_options(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession) -> None:
     await state.set_state(PurchaseState.product_description)
+    product = callback_query.data
 
-    data = await state.update_data({"product": callback_query.data})
+    # TODO select from database if product has subproducts -> set state to subproducts, else set product details
+    #  also call must be DRY
+    data = await state.update_data({"product": product})
     text = render_template('product_description.html', data)
     await edit_base_message(
         message=callback_query.message,
         text=text,
-        keyboard=get_inline_keyboard_builder(PRODUCT_DESCRIPTION, support_reachable=True),
+        keyboard=get_inline_keyboard_builder(support_reachable=True),   # TODO get database check
     )

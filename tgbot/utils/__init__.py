@@ -8,4 +8,6 @@ __all__ = (
     "render_template",
     "on_startup",
     "on_shutdown",
+    "add_caption_to_media",
+    "get_media_type",
 )
