@@ -27,7 +27,7 @@ async def get_problem_solution(db_session: AsyncSession, product: str, problem_o
     :param product: str prod name
     :param problem_order: int problem order starting from 0
     """
-    stmt = select(ProductProblem.title, ProductProblem.solution)\
+    stmt = select(ProductProblem.title, ProductProblem.solution, ProductProblem.attachment)\
         .join_from(ProductProblem, Product)\
         .where(Product.name == product)
     result = await db_session.execute(stmt)

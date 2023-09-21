@@ -33,7 +33,7 @@ class Product(CreateUpdateProxy):
     is_active = models.BooleanField(default=True, null=False, blank=False)
 
     def __str__(self):
-        return f'id: {self.pk} name: {self.name}'
+        return f'{self.pk}. {self.name}'
 
 
 class SubProduct(CreateUpdateProxy):
@@ -41,12 +41,14 @@ class SubProduct(CreateUpdateProxy):
     description = models.TextField(null=True, blank=True)
     is_active = models.BooleanField(default=True, null=False, blank=False)
 
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, limit_choices_to={"is_active": True})
 
 
 class ProductProblem(CreateUpdateProxy):
     title = models.CharField(max_length=255, null=False)
     solution = models.TextField(blank=False, null=False)
+
+    attachment = models.URLField(verbose_name="file link attachment", null=True, blank=True)
     # content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     # object_id = models.PositiveIntegerField()
     # content_object = GenericForeignKey("content_type", "object_id")

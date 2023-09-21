@@ -1,16 +1,21 @@
 from django.contrib import admin
 
-from .models import Product, ProductProblem, Ticket, TicketMedia, TicketMessage
+from .models import Product, ProductProblem, Ticket, TicketMedia, TicketMessage, SubProduct
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ["pk", "name", "description", 'created_at']
+    list_display = ["pk", "name", "description", 'created_at', 'is_active']
     list_display_links = ["pk", "name"]
     readonly_fields = ["created_at", "updated_at"]
 
     search_fields = ["name"]
     ordering = ['pk']
+
+
+@admin.register(SubProduct)
+class SubProductAdmin(admin.ModelAdmin):
+    ...
 
 
 @admin.register(ProductProblem)

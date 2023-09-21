@@ -61,7 +61,7 @@ async def get_problem_solution_by_number(
     await state.set_state(TechSupportState.problem_details)
     data = await state.get_data()
     solution = await get_problem_solution(db_session, data['product'], int(callback_query.data) - 1)
-    data['problem'], data['solution'] = solution.title, solution.solution
+    data['problem'], data['solutions'], data['attachments'] = solution.title, solution.solution.split("\n"), solution.attachment
 
     text = render_template('product_problem_solution.html', values=data)
     await edit_base_message(

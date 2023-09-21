@@ -1,7 +1,7 @@
 __all__ = ("ProductProblem", )
 
 
-from sqlalchemy import String, Text, ForeignKey
+from sqlalchemy import String, Text, ForeignKey, URL
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from .base import Base, TimeStampMixin
@@ -29,6 +29,7 @@ class ProductProblem(Base, TimeStampMixin):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     solution: Mapped[str] = mapped_column(Text(), nullable=False)
+    attachment: Mapped[str] = mapped_column(String(200), nullable=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("aviline_product.id"))
 
     product: Mapped["Product"] = relationship(back_populates="problems")
