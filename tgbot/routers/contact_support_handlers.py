@@ -1,10 +1,8 @@
 import re
-from typing import Union
 
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message, InputMediaPhoto, InputMediaDocument, InputMediaVideo, InputMediaAudio, \
-    InputMediaAnimation
+from aiogram.types import CallbackQuery, Message, InputMediaPhoto, InputMediaDocument, InputMediaVideo, InputMediaAudio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.crud import create_user_media_attached, create_ticket, create_ticket_message, get_customer_id_from_message, \
@@ -119,7 +117,7 @@ async def user_sent_message_or_media(message: Message, state: FSMContext):
     user_message = data.get('user_message')
 
     if user_message is None:
-        data['user_message'] = get_client_message(message)      # TODO Wrap this mess in one function
+        data['user_message'] = get_client_message(message)
     else:
         new_message = get_client_message(message)
         if new_message:

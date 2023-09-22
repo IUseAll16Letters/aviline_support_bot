@@ -1,19 +1,23 @@
-from typing import List, Tuple, Optional
+from typing import Tuple, Optional, Iterable
 
 from aiogram.utils.keyboard import KeyboardBuilder
 from aiogram.types import InlineKeyboardButton
 
 
 def get_inline_keyboard_builder(
-        iterable: Optional[List[str]] = None,
+        iterable: Optional[Iterable] = None,
         is_initial: bool = False,
-        row_col: Tuple[int, int] = (2, 1),
+        row_col: Tuple[int, int] = (1, 1),
         support_reachable: bool = False,
 ):
     iterable = iterable if iterable else []
     builder = KeyboardBuilder(button_type=InlineKeyboardButton)
-    for item in iterable:
-        builder.button(text=item, callback_data=item)
+    if isinstance(iterable, dict):
+        for key, value in iterable.items():
+            builder.button(text=key, callback_data=value)
+    else:
+        for item in iterable:
+            builder.button(text=item, callback_data=item)
 
     builder.adjust(*row_col)
 

@@ -69,7 +69,7 @@ async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
     """Trash handler when no other work (for debug and log purpose)
     shoudl raise error in future"""
     print(f'\033[032mCallback wasted\nCallback.data: {callback.data}\nstate: {await state.get_state()}\033\n'
-          f'data: {await state.get_data()}[0m')
+          f'data: {await state.get_data()}\033[0m')
 
 
 @router.message()
