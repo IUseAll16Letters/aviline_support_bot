@@ -1,6 +1,5 @@
 __all__ = ("create_ticket", "create_user_media_attached", "create_ticket_message", "get_customer_id_from_message",
            "close_ticket")
-
 from typing import Union, List
 from datetime import datetime
 
@@ -44,7 +43,9 @@ async def create_user_media_attached(
 
 
 async def create_ticket_message(
-        db_session: AsyncSession, messages: List[Message], ticket_id: int
+        db_session: AsyncSession,
+        messages: List[Message],
+        ticket_id: int,
 ) -> None:
     messages = [
         {
@@ -52,6 +53,7 @@ async def create_ticket_message(
             "ticket_id": ticket_id,
         } for message in messages
     ]
+
     stmt = insert(TicketMessage).values(messages).returning(TicketMessage.id)
     res = await db_session.execute(stmt)
     return res

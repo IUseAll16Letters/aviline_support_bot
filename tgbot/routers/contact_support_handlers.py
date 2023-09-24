@@ -183,13 +183,12 @@ async def user_confirmed_message(
         messages = []
         if media_to_send:
             messages.extend(await bot.send_media_group(chat_id=AVILINE_CHAT_ID, media=media_to_send))
-        print('media OK')
+
         if documents_to_send:
             messages.extend(await bot.send_media_group(chat_id=AVILINE_CHAT_ID, media=documents_to_send))
-        print('documents OK')
+
         if audio_to_send:
             messages.extend(await bot.send_media_group(chat_id=AVILINE_CHAT_ID, media=audio_to_send))
-        print('audio OK')
 
         saved_medias = await create_user_media_attached(
             db_session=db_session,
@@ -198,18 +197,20 @@ async def user_confirmed_message(
         )
         print(f"{saved_medias.all() = }")
 
-        saved_messages = await create_ticket_message(
-            db_session=db_session,
-            messages=messages,
-            ticket_id=ticket.id,
-        )
-        print(f"{saved_messages.all() = }")
-
     else:
-        await bot.send_message(
+        messages = [await bot.send_message(
             chat_id=AVILINE_CHAT_ID,
             text=user_message,
-        )
+        )]
+
+    saved_messages = await create_ticket_message(
+        db_session=db_session,
+        messages=messages,
+        ticket_id=ticket.id,
+    )
+
+    print(f"{saved_messages.all() = }")
+
     await db_session.commit()
 
     core_message: Message = data['message']
@@ -226,26 +227,21 @@ async def user_confirmed_message(
 @router.message(F.chat.id == AVILINE_CHAT_ID)
 async def hostage_message(message: Message, state: FSMContext, db_session: AsyncSession, bot: Bot):
     if message.reply_to_message:
-        print(f'has reply, {message.reply_to_message = }')
         quoted_message = message.reply_to_message.message_id
-        print(f'{quoted_message = }')
         ticket = await get_customer_id_from_message(
             db_session=db_session,
             message_id=quoted_message,
         )
-        print(ticket.__class__)
-        print(f"{ticket.customer = }")
         response = await bot.send_message(
             chat_id=ticket.customer,
             text=f"Your question was: {ticket.question}\n"
                  f"Your answer is: {message.text}",
         )
-        print(response)
         if response:
-            print("#Closing ticket")
             closed = await close_ticket(
                 db_session=db_session,
                 ticket_id=ticket.id,
             )
-            print(f'{closed = }')
         await db_session.commit()
+    else:
+        await message.reply(text="Nu da, ti tyt glavniy!")
