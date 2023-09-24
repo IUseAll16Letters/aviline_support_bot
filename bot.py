@@ -8,6 +8,7 @@ from tgbot.utils import on_startup, on_shutdown
 from tgbot.routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers
 from tgbot.middleware import DbSessionMiddleware
 from tgbot.database import get_connection_pool
+from tgbot.logging_config import setup_logger
 
 from config import settings
 

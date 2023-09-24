@@ -1,4 +1,10 @@
+from pathlib import Path
+
 from aiogram.types import InputMediaPhoto, InputMediaVideo, InputMediaDocument, InputMediaAudio, InputMediaAnimation
+
+
+TG_BOT_DIR = Path(__file__).resolve().parent
+PROJECT_LEVEL_DIR = TG_BOT_DIR.parent
 
 AVILINE_CHAT_ID = -1001948597816
 
@@ -26,3 +32,6 @@ MEDIA_TYPES = {
     InputMediaDocument: 4,
     InputMediaAnimation: 5,
 }
+
+LOG_FILE_NAME = 'telegram_bot.log'
+LOG_FILE_LOCATION = PROJECT_LEVEL_DIR / 'var' / 'log' / 'tgbot' / LOG_FILE_NAME
