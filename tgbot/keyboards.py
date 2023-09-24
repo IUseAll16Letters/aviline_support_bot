@@ -7,7 +7,7 @@ from aiogram.types import InlineKeyboardButton
 def get_inline_keyboard_builder(
         iterable: Optional[Iterable] = None,
         is_initial: bool = False,
-        row_col: Tuple[int, int] = (1, 1),
+        row_col: Tuple[int, int] = (2, 1),
         support_reachable: bool = False,
 ):
     iterable = iterable if iterable else []
