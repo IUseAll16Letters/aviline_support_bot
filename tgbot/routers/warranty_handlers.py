@@ -3,18 +3,17 @@ import aiofiles
 
 from os.path import basename
 from aiogram import Router, F, Bot
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
-# from sqlaclhemy ...
 from tgbot.constants import CONFIRMATION_MESSAGE, WARRANTY_CHANGE_CARD, WARRANTY_CHANGE_CONTACTS, WARRANTY_CONFIRM_MAIL
 from config.settings import SMTP_MAIL_PARAMS
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import WarrantyState
-from tgbot.utils import render_template, parse_message_media, edit_base_message, get_client_message, \
+from tgbot.utils import render_template, edit_base_message, get_client_message, \
     send_email_to_aviline, download_file_from_telegram_file_id
 from tgbot.utils.base import get_allowed_media_id
+from tgbot.logging_config.setup_logger import mailing
 
 router = Router()
 
@@ -160,14 +159,17 @@ async def client_need_to_confirm(message: Message, bot: Bot, state: FSMContext):
     await message.delete()
 
 
-@router.callback_query(F.data.in_(("change_warranty_card", "change_client_contact")), WarrantyState.approval_docs_contact)
+@router.callback_query(F.data.in_(("change_warranty_card", "change_client_contact")),
+                       WarrantyState.approval_docs_contact)
 async def clear_field(callback_query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     if callback_query.data == "change_warranty_card":
         try:
             os.remove(data["user_warranty_card"])
         except Exception as e:
-            print('COULDNT DELETE FILE FROM CLEARFIELD BECAUSE OF E', e)
+            msg = f"send_mail. Could not delete the file: {data['user_warranty_card']}. Error: {e}"
+            mailing.error(msg=msg)
+
         data["user_warranty_card"] = None
     else:
         data["user_warranty_message"] = None
@@ -190,7 +192,7 @@ async def clear_field(callback_query: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == CONFIRMATION_MESSAGE, WarrantyState.approval_docs_contact)
-async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
+async def send_mail(callback_query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     core_message = data['message']
     await edit_base_message(
@@ -201,20 +203,25 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
 
     text = render_template("warranty_email_template.html", values=data)
     user_warranty_card = data['user_warranty_card']
-    async with aiofiles.open(user_warranty_card, 'rb') as f:
-        await send_email_to_aviline(
-            subject=SMTP_MAIL_PARAMS['subject']
-            .replace("%u%", data.get('default_user', 'tester'))
-            .replace('%tgi%', str(callback_query.from_user.id)),
-            text=text,
-            warranty_card=(await f.read()),
-            warranty_basename=basename(user_warranty_card),
-        )
+    try:
+        async with aiofiles.open(user_warranty_card, 'rb') as f:
+            await send_email_to_aviline(
+                subject=SMTP_MAIL_PARAMS['subject']
+                .replace("%u%", data.get('default_user', 'tester'))
+                .replace('%tgi%', str(callback_query.from_user.id)),
+                text=text,
+                warranty_card=(await f.read()),
+                warranty_basename=basename(user_warranty_card),
+            )
+    except Exception as e:
+        msg = f"send_mail. Could no send email. Error: {e}"
+        mailing.error(msg=msg)
 
     try:
         os.remove(user_warranty_card)
     except Exception as e:
-        print('COULDNT REMOVE FILE FROM SENDING MAIL BECAUSE OF: ', e)
+        msg = f"send_mail. Could not delete the file: {user_warranty_card}. Error: {e}"
+        mailing.error(msg=msg)
 
     await edit_base_message(
         message=data['message'],

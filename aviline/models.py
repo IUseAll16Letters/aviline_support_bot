@@ -84,6 +84,6 @@ class TicketMessage(CreateUpdateProxy):
 
 class Visitor(CreateUpdateProxy):
     user_id = models.IntegerField(null=False, blank=False)
-    username = models.CharField(max_length=255, null=False, blank=False)
+    username = models.CharField(max_length=255, null=True, blank=True)
     firstname = models.CharField(max_length=255, null=True, blank=True)
     lastname = models.CharField(max_length=255, null=True, blank=True)

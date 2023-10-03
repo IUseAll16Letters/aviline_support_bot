@@ -166,8 +166,6 @@ async def user_confirmed_message(
         question=user_message,
         user_telegram_id=user_telegram_id,
     )
-
-    print(ticket, f'\033[34;4m{ticket.id = }\033[0m')
     media = data.get('user_media')
 
     if media:
@@ -175,10 +173,6 @@ async def user_confirmed_message(
         media_to_send = [i for i in media if isinstance(i, (InputMediaPhoto, InputMediaVideo))]
         documents_to_send = [i for i in media if isinstance(i, InputMediaDocument)]
         audio_to_send = [i for i in media if isinstance(i, InputMediaAudio)]
-
-        print(f"{media_to_send = }")
-        print(f"{documents_to_send = }")
-        print(f"{audio_to_send = }")
 
         messages = []
         if media_to_send:
@@ -195,7 +189,6 @@ async def user_confirmed_message(
             media=media,
             ticket_id=ticket.id,
         )
-        print(f"{saved_medias.all() = }")
 
     else:
         messages = [await bot.send_message(
@@ -208,8 +201,6 @@ async def user_confirmed_message(
         messages=messages,
         ticket_id=ticket.id,
     )
-
-    print(f"{saved_messages.all() = }")
 
     await db_session.commit()
 
@@ -244,4 +235,4 @@ async def hostage_message(message: Message, state: FSMContext, db_session: Async
             )
         await db_session.commit()
     else:
-        await message.reply(text="Nu da, ti tyt glavniy!")
+        await message.reply(text=f"Nu da, ti tyt glavniy!, {message.chat.id}")

@@ -114,7 +114,7 @@ async def download_file_from_telegram_file_id(bot_instance: Bot, telegram_file_i
     f = await bot_instance.get_file(telegram_file_id)
     dt = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
     user_file_name = f"{telegram_user_id}_{dt}.jpg"
-    full_file_name = fr"{WARRANTY_CARDS_LOCATION}\{user_file_name}"
+    full_file_name = fr"{WARRANTY_CARDS_LOCATION}/{user_file_name}" #  edit this mess
     print(f'warranty: {full_file_name = }')
     await bot_instance.download_file(f.file_path, destination=full_file_name)
     return full_file_name

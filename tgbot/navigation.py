@@ -1,9 +1,12 @@
 __all__ = ("Navigation", "template_from_state")
 
+import logging
 from typing import Optional, List
-from aiogram.fsm.state import State
 
 from tgbot.states import *
+from tgbot.logging_config.setup_logger import navigation
+
+navigation.setLevel(logging.DEBUG)
 
 
 class Node:
@@ -15,7 +18,6 @@ class Node:
             pre.next.append(self)
 
     def find(self, value: Optional[str]) -> "Node":
-
         def dfs(root: Node, v: str):
             if root == v:
                 return root
@@ -25,18 +27,25 @@ class Node:
                 if res is not None:
                     return res
 
-        return dfs(self, value)
+        res_node = dfs(self, value)
+        msg = f"searching: {value}, found: {res_node}"
+        navigation.info(msg=msg)
+        return res_node
 
     def reverse_state(self, par: Optional[str] = None) -> Optional[State]:
         if self.s is None:
             return None
 
-        if self.s is ContactSupportState.enter_name and par in ('purchase', 'support'):
+        if self.s is ContactSupportState.enter_name:
             if par == 'purchase':
                 return PurchaseState.product_description
-            else:
+            elif par == 'support':
                 return TechSupportState.product_problems
-
+            else:
+                return None
+        msg = f"reversing from {self.s}"
+        navigation.info(msg=msg)
+        del msg
         return self.prev.s
 
     def __eq__(self, other):

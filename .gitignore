@@ -187,3 +187,4 @@ fabric.properties
 storage
 
 *.sqlite3
+var/log/tgbot/*.log

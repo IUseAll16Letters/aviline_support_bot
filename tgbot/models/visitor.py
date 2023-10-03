@@ -10,7 +10,7 @@ class Visitor(Base, TimeStampMixin):
     __tablename__ = 'aviline_visitor'
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(BigInteger(), index=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(BigInteger(), index=True, nullable=True)
     username: Mapped[str] = mapped_column(String(255), nullable=False)
     firstname: Mapped[str] = mapped_column(String(255), nullable=True)
     lastname: Mapped[str] = mapped_column(String(255), nullable=True)
