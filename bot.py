@@ -5,7 +5,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from tgbot.utils import on_startup, on_shutdown
-from tgbot.routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers
+from tgbot.routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers, \
+    warranty_handlers
 from tgbot.middleware import DbSessionMiddleware
 from tgbot.database import get_connection_pool
 from tgbot.logging_config import setup_logger
@@ -25,6 +26,7 @@ async def main() -> None:
         tech_support_handlers.router,
         purchase_handlers.router,
         contact_support_handlers.router,
+        warranty_handlers.router,
         basic_handlers.router,
     )
 

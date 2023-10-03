@@ -1,12 +1,15 @@
 __all__ = ("edit_base_message", "get_client_message", "parse_message_media",
-           "on_startup", "on_shutdown", "add_caption_to_media", "get_media_type")
+           "on_startup", "on_shutdown", "add_caption_to_media", "get_media_type",
+           "download_file_from_telegram_file_id", "get_allowed_media_id")
 
 from typing import Optional, Tuple, List
+from datetime import datetime
 
 from aiogram import Bot
 from aiogram.types import Message, InputMediaVideo, InputMediaPhoto, InputMediaDocument, InputMediaAudio
 from aiogram.utils.keyboard import KeyboardBuilder
 
+from config.settings import WARRANTY_CARDS_LOCATION
 from tgbot.constants import MIME_TYPES_ALLOWED, MEDIA_TYPES
 from tgbot.types import Media, Optional_Media
 
@@ -93,3 +96,25 @@ def add_caption_to_media(media_files: List[Media], caption: str):
     else:
         media_files[0].caption = caption
 
+
+def get_allowed_media_id(message: Message):
+    # TODO FIX THIS MESS
+    file_id = None
+    if message.photo or (message.document is not None and message.document.mime_type.startswith('image')):
+        if message.photo:
+            file_id = message.photo[-1].file_id
+        else:
+            file_id = message.document.file_id
+
+    return file_id
+
+
+async def download_file_from_telegram_file_id(bot_instance: Bot, telegram_file_id: str, telegram_user_id: int) -> str:
+    """downloads file and returns its location"""
+    f = await bot_instance.get_file(telegram_file_id)
+    dt = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
+    user_file_name = f"{telegram_user_id}_{dt}.jpg"
+    full_file_name = fr"{WARRANTY_CARDS_LOCATION}\{user_file_name}"
+    print(f'warranty: {full_file_name = }')
+    await bot_instance.download_file(f.file_path, destination=full_file_name)
+    return full_file_name

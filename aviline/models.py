@@ -80,3 +80,10 @@ class TicketMessage(CreateUpdateProxy):
     message_id = models.PositiveBigIntegerField(null=False, blank=False)
 
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, editable=False)
+
+
+class Visitor(CreateUpdateProxy):
+    user_id = models.IntegerField(null=False, blank=False)
+    username = models.CharField(max_length=255, null=False, blank=False)
+    firstname = models.CharField(max_length=255, null=True, blank=True)
+    lastname = models.CharField(max_length=255, null=True, blank=True)

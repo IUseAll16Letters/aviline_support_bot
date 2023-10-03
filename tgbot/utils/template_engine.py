@@ -8,7 +8,7 @@ from config.settings import TG_BOT_TEMPLATES
 
 env = Environment(
     loader=FileSystemLoader(TG_BOT_TEMPLATES),
-    autoescape=select_autoescape(['html'])
+    autoescape=select_autoescape(['html']),
 )
 
 

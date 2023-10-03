@@ -1,6 +1,7 @@
 from .problem import *
 from .product import *
 from .ticket import *
+from .debug_visitors import *
 
 __all__ = (
     "get_all_products",
@@ -12,4 +13,5 @@ __all__ = (
     "create_user_media_attached",
     "get_customer_id_from_message",
     "get_product_details",
+    "create_visitor",  # remove this after tests
 )

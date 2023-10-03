@@ -14,7 +14,7 @@ file_rotation_handler = handlers.TimedRotatingFileHandler(
     when='midnight',
     backupCount=7,
 )
-file_rotation_formatter = logging.Formatter("%(levelname)s:%(name)s: %(message)s")
+file_rotation_formatter = logging.Formatter("%(asctime)s %(levelname)s:%(name)s: %(message)s")
 file_rotation_handler.setLevel(logging.INFO)
 file_rotation_handler.setFormatter(file_rotation_formatter)
 

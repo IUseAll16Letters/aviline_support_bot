@@ -28,3 +28,13 @@ class ContactSupportState(StatesGroup):
     enter_contact = State()
     enter_message = State()
     entry_confirmation = State()
+
+
+class WarrantyState(StatesGroup):
+    describe_problem = State()
+    where_when_buy = State()
+    location = State()
+    car_brand = State()
+    confirm_entry = State()
+    approval_docs_contact = State()
+    confirm_mail_sending = State()

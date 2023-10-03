@@ -62,6 +62,13 @@ def get_navigation() -> Node:
     product_desc = Node(PurchaseState.product_description, pre=purchase)
     sub_product = ...
 
+    warranty_describe = Node(WarrantyState.describe_problem, pre=start)
+    warranty_where_when = Node(WarrantyState.where_when_buy, pre=warranty_describe)
+    warranty_city = Node(WarrantyState.location, pre=warranty_where_when)
+    warranty_car = Node(WarrantyState.car_brand, pre=warranty_city)
+    warranty_confirm = Node(WarrantyState.confirm_entry, pre=warranty_car)
+    warranty_attach = Node(WarrantyState.approval_docs_contact, pre=warranty_confirm)
+
     enter_name = Node(ContactSupportState.enter_name)
     product_desc.next = [enter_name]
     problem_detail.next = [enter_name]
@@ -86,4 +93,10 @@ template_from_state = {
     ContactSupportState.enter_contact: "client_enter_contact.html",
     ContactSupportState.enter_message: "client_enter_message.html",
     ContactSupportState.entry_confirmation: "client_message_confirm.html",
+    WarrantyState.describe_problem: 'warranty_describe_problem.html',
+    WarrantyState.where_when_buy: 'warranty_where_when_buy.html',
+    WarrantyState.location: 'warranty_location.html',
+    WarrantyState.car_brand: 'warranty_client_car.html',
+    WarrantyState.confirm_entry: 'warranty_confirm_entry.html',
+    WarrantyState.approval_docs_contact: 'warranty_enter_approval_docs.html',
 }

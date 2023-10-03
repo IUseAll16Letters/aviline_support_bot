@@ -10,7 +10,8 @@ AVILINE_CHAT_ID = -1001948597816
 
 AVAILABLE_SERVICES = {
     'О продукции': 'purchase',
-    'Техподдержка': 'support'
+    'Техподдержка': 'support',
+    'Гарантийная служба': 'warranty',
 }
 
 PRODUCT_DESCRIPTION = ['versions', 'price', 'details', 'manual']
@@ -35,3 +36,7 @@ MEDIA_TYPES = {
 
 LOG_FILE_NAME = 'telegram_bot.log'
 LOG_FILE_LOCATION = PROJECT_LEVEL_DIR / 'var' / 'log' / 'tgbot' / LOG_FILE_NAME
+
+WARRANTY_CHANGE_CARD = {"🔁 Изменить вложение": "change_warranty_card"}
+WARRANTY_CHANGE_CONTACTS = {"🔁 Изменить контактные данные": "change_client_contact"}
+WARRANTY_CONFIRM_MAIL = {"✅ Отправить сообщение": CONFIRMATION_MESSAGE}

@@ -15,7 +15,6 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / "config" / '.env')
@@ -26,10 +25,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = os.getenv("DEBUG")
 
-
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS.extend(os.getenv("ALLOWED_HOSTS").split(','))
-
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -43,7 +40,6 @@ INSTALLED_APPS = [
 
 if DEBUG:
     INSTALLED_APPS.append('django_extensions')
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -76,7 +72,6 @@ TG_BOT_TEMPLATES = BASE_DIR / "tgbot" / "templates"
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-
 if DEBUG:
     DATABASES = {
         'default': {
@@ -93,7 +88,6 @@ else:
         }
     }
 
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -109,7 +103,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -121,3 +114,28 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_ROOT = BASE_DIR / "media"
+WARRANTY_CARDS_LOCATION = MEDIA_ROOT / "warranty"
+
+EMAIL_HOST = os.getenv('EMAIL_HOST')
+EMAIL_PORT = os.getenv('EMAIL_PORT')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_AVILINE_MAILBOX = os.getenv('EMAIL_AVILINE_MAILBOX')
+DEFAULT_SUBJECT = "Warranty from user - %u%, telegram_id(debug) - %tgi%"
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SERVER_EMAIL = EMAIL_HOST_USER
+
+SMTP_MAIL_PARAMS = {
+    "subject": DEFAULT_SUBJECT,
+    "send_to": EMAIL_AVILINE_MAILBOX,
+    "tls": EMAIL_USE_TLS,
+    "ssl": EMAIL_USE_SSL,
+    'host': EMAIL_HOST,
+    'user': EMAIL_HOST_USER,
+    'password': EMAIL_HOST_PASSWORD,
+    'port': EMAIL_PORT,
+}
