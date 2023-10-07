@@ -36,6 +36,14 @@ class Product(CreateUpdateProxy):
         return f'{self.pk}. {self.name}'
 
 
+class ProductDetail(CreateUpdateProxy):
+    title = models.CharField(max_length=150, blank=True, null=True)
+    description = models.CharField(max_length=255, blank=False, null=False)
+    attachment = models.URLField(verbose_name="attachment link", null=True, blank=True)
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+
+
 class SubProduct(CreateUpdateProxy):
     name = models.CharField(max_length=100, unique=True, null=False)
     description = models.TextField(null=True, blank=True)
@@ -87,3 +95,5 @@ class Visitor(CreateUpdateProxy):
     username = models.CharField(max_length=255, null=True, blank=True)
     firstname = models.CharField(max_length=255, null=True, blank=True)
     lastname = models.CharField(max_length=255, null=True, blank=True)
+
+

@@ -1,9 +1,10 @@
-__all__ = ("get_all_products", "get_product_details")
+__all__ = ("get_all_products", )
 
 from sqlalchemy import select, Sequence
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.models import Product, ProductProblem
+from tgbot.models import Product, ProductDetail
+from tgbot.crud import get_product_problems
 
 
 async def get_all_products(db_session: AsyncSession) -> Sequence:
@@ -15,7 +16,3 @@ async def get_all_products(db_session: AsyncSession) -> Sequence:
     result = await db_session.execute(stmt)
 
     return result.scalars().all()
-
-
-async def get_product_details(db_session: AsyncSession) -> Sequence:
-    ...

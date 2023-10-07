@@ -2,6 +2,7 @@ __all__ = ("edit_base_message", "get_client_message", "parse_message_media",
            "on_startup", "on_shutdown", "add_caption_to_media", "get_media_type",
            "download_file_from_telegram_file_id", "get_allowed_media_id")
 
+from pathlib import Path
 from typing import Optional, Tuple, List
 from datetime import datetime
 
@@ -100,6 +101,10 @@ def add_caption_to_media(media_files: List[Media], caption: str):
 def get_allowed_media_id(message: Message):
     # TODO FIX THIS MESS
     file_id = None
+    try:
+        print(f'warranty: {message.document.mime_type = }')
+    except Exception:
+        ...
     if message.photo or (message.document is not None and message.document.mime_type.startswith('image')):
         if message.photo:
             file_id = message.photo[-1].file_id
@@ -114,7 +119,7 @@ async def download_file_from_telegram_file_id(bot_instance: Bot, telegram_file_i
     f = await bot_instance.get_file(telegram_file_id)
     dt = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
     user_file_name = f"{telegram_user_id}_{dt}.jpg"
-    full_file_name = fr"{WARRANTY_CARDS_LOCATION}/{user_file_name}" #  edit this mess
+    full_file_name = str(Path(WARRANTY_CARDS_LOCATION) / user_file_name)
     print(f'warranty: {full_file_name = }')
     await bot_instance.download_file(f.file_path, destination=full_file_name)
     return full_file_name

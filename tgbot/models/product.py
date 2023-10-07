@@ -33,6 +33,9 @@ class Product(Base, TimeStampMixin):
     problems: Mapped[List["ProductProblem"]] = relationship(
         back_populates="product", cascade="all, delete-orphan",
     )
+    details: Mapped[List["ProductDetail"]] = relationship(
+        back_populates="product", cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f'Product(id={self.id!r}, name={self.name!r})'

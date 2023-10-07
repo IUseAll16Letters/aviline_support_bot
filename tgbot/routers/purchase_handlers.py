@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import PurchaseState
 from tgbot.utils import render_template, edit_base_message
-from tgbot.crud import get_all_products
-
+from tgbot.crud import get_all_products, get_product_detail
+from tgbot.logging_config.setup_logger import database as database_logging
 
 router = Router()
 
@@ -26,17 +26,24 @@ async def purchase_selected(callback_query: CallbackQuery, state: FSMContext, db
     )
 
 
-@router.callback_query(F.data != "back", PurchaseState.select_product)  # TODO Achtung, tyt kostil!
+@router.callback_query(PurchaseState.select_product)
 async def purchase_product_options(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession) -> None:
     await state.set_state(PurchaseState.product_description)
     product = callback_query.data
-
-    # TODO select from database if product has subproducts -> set state to subproducts, else set product details
-    #  also call must be DRY
     data = await state.update_data({"product": product})
-    text = render_template('product_description.html', data)
-    await edit_base_message(
-        message=callback_query.message,
-        text=text,
-        keyboard=get_inline_keyboard_builder(support_reachable=True),   # TODO get database check
-    )
+    product_details = await get_product_detail(db_session, product)
+    try:
+        if product_details:
+            data['title'], data['details'], data['attachment'] = product_details[0].title, product_details[0].description, product_details[0].attachment
+
+        text = render_template('product_description.html', values=data)
+        await edit_base_message(
+            message=callback_query.message,
+            text=text,
+            keyboard=get_inline_keyboard_builder(support_reachable=True),   # TODO get database check
+        )
+    except Exception as e:
+        msg = f"purchase_select_options | state: select_product | could not fetch product details for " \
+              f"{product} product | error: {e}"
+        database_logging.error(msg=msg)
+        await callback_query.answer('Возникла ошибка обращения к БД. Приносим извинения')
