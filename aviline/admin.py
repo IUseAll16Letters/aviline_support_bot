@@ -15,7 +15,7 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(ProductDetail)
 class ProductDetailAdmin(admin.ModelAdmin):
-    ...
+    list_display = ["id", "title", "description", "attachment", "product__name"]
 
 
 @admin.register(SubProduct)
