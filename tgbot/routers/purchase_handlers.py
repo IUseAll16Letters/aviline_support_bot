@@ -7,7 +7,7 @@ from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import PurchaseState
 from tgbot.utils import render_template, edit_base_message
 from tgbot.crud import get_all_products, get_product_detail
-from tgbot.logging_config.setup_logger import database as database_logging
+from tgbot.logging_config import database as database_logging
 
 router = Router()
 

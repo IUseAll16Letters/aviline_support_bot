@@ -13,7 +13,7 @@ from tgbot.states import WarrantyState
 from tgbot.utils import render_template, edit_base_message, get_client_message, \
     send_email_to_aviline, download_file_from_telegram_file_id
 from tgbot.utils.base import get_allowed_media_id
-from tgbot.logging_config.setup_logger import mailing
+from tgbot.logging_config import mailing
 
 router = Router()
 

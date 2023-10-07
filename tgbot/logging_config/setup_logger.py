@@ -1,3 +1,5 @@
+__all__ = ("waster_queries", "navigation", "mailing", "database")
+
 import logging
 import logging.handlers as handlers
 from aiogram.loggers import event, dispatcher, middlewares

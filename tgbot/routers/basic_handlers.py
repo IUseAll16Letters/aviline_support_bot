@@ -9,7 +9,7 @@ from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils.template_engine import render_template
 from tgbot.crud import get_all_products, get_product_problems, create_visitor
 from tgbot.navigation import Navigation, template_from_state
-from tgbot.logging_config.setup_logger import navigation
+from tgbot.logging_config import navigation
 
 
 router = Router()

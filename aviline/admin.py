@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Product, ProductProblem, Ticket, TicketMedia, TicketMessage, SubProduct
+from .models import Product, ProductProblem, Ticket, TicketMedia, TicketMessage, SubProduct, ProductDetail
 
 
 @admin.register(Product)
@@ -11,6 +11,11 @@ class ProductAdmin(admin.ModelAdmin):
 
     search_fields = ["name"]
     ordering = ['pk']
+
+
+@admin.register(ProductDetail)
+class ProductDetailAdmin(admin.ModelAdmin):
+    ...
 
 
 @admin.register(SubProduct)

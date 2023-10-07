@@ -1,11 +1,8 @@
-import logging
-
-from aiogram import Router, Bot
+from aiogram import Router
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.logging_config.setup_logger import waster_queries
+from tgbot.logging_config import waster_queries
 
 router = Router()
 

@@ -1,6 +1,8 @@
 __all__ = (
     "Product",
+    "SubProduct",
     "ProductProblem",
+    "ProductDetail",
     "Ticket",
     "TicketMessage",
     "TicketMedia",
