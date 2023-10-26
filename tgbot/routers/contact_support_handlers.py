@@ -5,8 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, InputMediaPhoto, InputMediaDocument, InputMediaVideo, InputMediaAudio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.crud import create_user_media_attached, create_ticket, create_ticket_message, get_customer_id_from_message, \
-    close_ticket
+from tgbot.crud import TicketRelatedQueries
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.models import Ticket
 from tgbot.states import ContactSupportState
@@ -161,8 +160,7 @@ async def user_confirmed_message(
     user_message = data['user_message']
     user_telegram_id = data['user_telegram_id']
 
-    ticket: Ticket = await create_ticket(
-        db_session=db_session,
+    ticket: Ticket = await TicketRelatedQueries(db_session).create_ticket(
         question=user_message,
         user_telegram_id=user_telegram_id,
     )
@@ -184,8 +182,7 @@ async def user_confirmed_message(
         if audio_to_send:
             messages.extend(await bot.send_media_group(chat_id=AVILINE_CHAT_ID, media=audio_to_send))
 
-        saved_medias = await create_user_media_attached(
-            db_session=db_session,
+        saved_medias = await TicketRelatedQueries(db_session).create_user_media_attached(
             media=media,
             ticket_id=ticket.id,
         )
@@ -196,8 +193,7 @@ async def user_confirmed_message(
             text=user_message,
         )]
 
-    saved_messages = await create_ticket_message(
-        db_session=db_session,
+    saved_messages = await TicketRelatedQueries(db_session).create_ticket_message(
         messages=messages,
         ticket_id=ticket.id,
     )
@@ -219,8 +215,7 @@ async def user_confirmed_message(
 async def hostage_message(message: Message, state: FSMContext, db_session: AsyncSession, bot: Bot):
     if message.reply_to_message:
         quoted_message = message.reply_to_message.message_id
-        ticket = await get_customer_id_from_message(
-            db_session=db_session,
+        ticket = await TicketRelatedQueries(db_session).get_customer_id_from_message(
             message_id=quoted_message,
         )
         response = await bot.send_message(
@@ -229,10 +224,9 @@ async def hostage_message(message: Message, state: FSMContext, db_session: Async
                  f"Your answer is: {message.text}",
         )
         if response:
-            closed = await close_ticket(
-                db_session=db_session,
+            closed = await TicketRelatedQueries(db_session).close_ticket(
                 ticket_id=ticket.id,
             )
         await db_session.commit()
     else:
-        await message.reply(text=f"Nu da, ti tyt glavniy!, {message.chat.id}")
+        await message.reply(text=f"Полегче на поворотах, господа. {message.chat.id}")

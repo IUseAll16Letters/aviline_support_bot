@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tgbot.states import TechSupportState
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils import edit_base_message, render_template
-from tgbot.crud import get_product_problems, get_problem_solution, get_all_products
+from tgbot.crud import get_product_problems, get_problem_solution, ProductRelatedQueries
 
 router = Router()
 
@@ -20,7 +20,7 @@ async def support_selected(
     await state.set_state(TechSupportState.select_product)
     data = await state.update_data({"branch": "support"})
     text = render_template('products_list.html', data)
-    available_products = await get_all_products(db_session)
+    available_products = await ProductRelatedQueries(db_session).get_all_products()
 
     await edit_base_message(
         message=callback_query.message,

@@ -27,4 +27,3 @@ async def wasted_message(message: Message, state: FSMContext) -> None:
                      f"at state: {await state.get_state()}, " \
                      f"from_user: {message.from_user.id}"
     print(f"\033[034;4m{logger_message}\033[0m")
-    waster_queries.info(msg=logger_message)

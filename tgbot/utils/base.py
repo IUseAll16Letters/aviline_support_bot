@@ -7,7 +7,7 @@ from typing import Optional, Tuple, List
 from datetime import datetime
 
 from aiogram import Bot
-from aiogram.types import Message, InputMediaVideo, InputMediaPhoto, InputMediaDocument, InputMediaAudio
+from aiogram.types import Message, InputMediaVideo, InputMediaPhoto, InputMediaDocument, InputMediaAudio, CallbackQuery
 from aiogram.utils.keyboard import KeyboardBuilder
 
 from config.settings import WARRANTY_CARDS_LOCATION
@@ -49,33 +49,27 @@ def parse_message_media(message: Message) -> Tuple[Optional[bool], Optional_Medi
     """Parse client photo or video from message if there are any attached"""
     media_object = None
     media_is_document = None
-    print(message)
     if message.photo is not None:
         media_object = message.photo[-1]
         media_object = InputMediaPhoto(media=media_object.file_id)
         media_is_document = 0
-        print(media_object.type, f'{media_object.media = }')
 
     elif message.video is not None or message.video_note is not None:
         media_object = message.video if message.video else message.video_note
         media_object = InputMediaVideo(media=media_object.file_id)
         media_is_document = message.video is None
-        print(media_object.type, f'{media_object.media = }')
 
     elif message.audio is not None or message.voice is not None:
         media_object = message.audio if message.audio else message.voice
         media_object = InputMediaAudio(media=media_object.file_id)
         media_is_document = 1
-        print(media_object.type, f"{media_object.media = }")
 
     elif message.document is not None and message.document.mime_type in MIME_TYPES_ALLOWED:
-        print(f"{message.document.mime_type = }")
         if message.animation is not None:
             return media_is_document, media_object
 
         media_object = message.document.file_id
         media_object = InputMediaDocument(media=media_object)
-        print(media_object.type, f"{media_object.media = }")
         media_is_document = 1
 
     return media_is_document, media_object
@@ -120,6 +114,6 @@ async def download_file_from_telegram_file_id(bot_instance: Bot, telegram_file_i
     dt = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
     user_file_name = f"{telegram_user_id}_{dt}.jpg"
     full_file_name = str(Path(WARRANTY_CARDS_LOCATION) / user_file_name)
-    print(f'warranty: {full_file_name = }')
+    # print(f'warranty: {full_file_name = }')
     await bot_instance.download_file(f.file_path, destination=full_file_name)
     return full_file_name

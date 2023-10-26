@@ -68,8 +68,8 @@ def get_navigation() -> Node:
     problem_detail = Node(TechSupportState.problem_details, pre=problems)
 
     purchase = Node(PurchaseState.select_product, pre=start)
+    sub_product = Node(PurchaseState.select_sub_product, pre=purchase)
     product_desc = Node(PurchaseState.product_description, pre=purchase)
-    sub_product = ...
 
     warranty_describe = Node(WarrantyState.describe_problem, pre=start)
     warranty_where_when = Node(WarrantyState.where_when_buy, pre=warranty_describe)
@@ -80,6 +80,7 @@ def get_navigation() -> Node:
 
     enter_name = Node(ContactSupportState.enter_name)
     product_desc.next = [enter_name]
+    sub_product.next = [enter_name]
     problem_detail.next = [enter_name]
 
     enter_contact = Node(ContactSupportState.enter_contact, pre=enter_name)

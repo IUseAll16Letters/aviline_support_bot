@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import PurchaseState
 from tgbot.utils import render_template, edit_base_message
-from tgbot.crud import get_all_products, get_product_detail
-from tgbot.logging_config import database as database_logging
+from tgbot.crud import ProductRelatedQueries
+from tgbot.utils.shortcuts import recursive_scout_products
 
 router = Router()
 
@@ -18,7 +18,7 @@ async def purchase_selected(callback_query: CallbackQuery, state: FSMContext, db
     data = await state.update_data({"branch": callback_query.data})
 
     text = render_template('products_list.html', data)
-    available_products = await get_all_products(db_session)
+    available_products = await ProductRelatedQueries(db_session).get_all_products()
     await edit_base_message(
         message=callback_query.message,
         text=text,
@@ -26,24 +26,13 @@ async def purchase_selected(callback_query: CallbackQuery, state: FSMContext, db
     )
 
 
+# *start* TODO Fix this piece
 @router.callback_query(PurchaseState.select_product)
 async def purchase_product_options(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession) -> None:
-    await state.set_state(PurchaseState.product_description)
-    product = callback_query.data
-    data = await state.update_data({"product": product})
-    product_details = await get_product_detail(db_session, product)
-    try:
-        if product_details:
-            data['title'], data['details'], data['attachment'] = product_details[0].title, product_details[0].description, product_details[0].attachment
+    await recursive_scout_products(callback_query, state, db_session)
 
-        text = render_template('product_description.html', values=data)
-        await edit_base_message(
-            message=callback_query.message,
-            text=text,
-            keyboard=get_inline_keyboard_builder(support_reachable=True),   # TODO get database check
-        )
-    except Exception as e:
-        msg = f"purchase_select_options | state: select_product | could not fetch product details for " \
-              f"{product} product | error: {e}"
-        database_logging.error(msg=msg)
-        await callback_query.answer('Возникла ошибка обращения к БД. Приносим извинения')
+
+@router.callback_query(PurchaseState.select_sub_product)
+async def select_subproduct_options(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession) -> None:
+    await recursive_scout_products(callback_query, state, db_session)
+# *end* TODO fix this piece

@@ -7,6 +7,7 @@ class BaseState(StatesGroup):
 
 class PurchaseState(BaseState):
     select_product = State()
+    select_sub_product = State()
     product_description = State()
 
 

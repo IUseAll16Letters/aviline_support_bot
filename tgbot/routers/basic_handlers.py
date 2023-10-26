@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tgbot.constants import AVAILABLE_SERVICES, CONFIRMATION_MESSAGE
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils.template_engine import render_template
-from tgbot.crud import get_all_products, get_product_problems, create_visitor
+from tgbot.crud import ProductRelatedQueries, get_product_problems, create_visitor
 from tgbot.navigation import Navigation, template_from_state
 from tgbot.logging_config import navigation
 
@@ -18,17 +18,8 @@ router = Router()
 @router.message(CommandStart())
 async def handle_start(message: Message, db_session: AsyncSession) -> None:
     """/start command handler, no state, no db_access"""
-
-    keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True)
+    keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True, row_col=(2, 1))
     text = render_template('start.html')
-    await create_visitor(
-        db_session=db_session,
-        user_id=message.from_user.id,
-        username=message.from_user.username,
-        firstname=message.from_user.first_name,
-        lastname=message.from_user.last_name,
-    )
-    await db_session.commit()
     await message.answer(
         text=text,
         reply_markup=keyboard.as_markup(),
@@ -51,14 +42,16 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
         template = template_from_state[reverse_state]
 
         if template == 'products_list.html':
-            keyboard = get_inline_keyboard_builder(await get_all_products(db_session))
+            keyboard = get_inline_keyboard_builder(await ProductRelatedQueries(db_session).get_all_products())
 
         elif template == 'product_problems.html':
             problems = await get_product_problems(db_session=db_session, product=data["product"])
             data['problems'], data['enumerate'] = problems, enumerate
             keyboard = get_inline_keyboard_builder(
                 [str(i) for i in range(1, len(data['problems']) + 1)],
-                support_reachable=True)
+                support_reachable=True,
+                row_col=(2, 2),
+            )
 
         elif template == 'warranty_confirm_entry.html':
             keyboard = get_inline_keyboard_builder(
@@ -68,7 +61,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
 
         if reverse_state is None:
             await state.clear()
-            keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True)
+            keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True, row_col=(2, 1))
         else:
             await state.set_state(reverse_state)
 

@@ -1,6 +1,5 @@
 __all__ = (
     "Product",
-    "SubProduct",
     "ProductProblem",
     "ProductDetail",
     "Ticket",
@@ -34,6 +33,10 @@ class Product(CreateUpdateProxy):
     description = models.TextField(null=True, blank=True)
     is_active = models.BooleanField(default=True, null=False, blank=False)
 
+    is_subproduct_of = models.ForeignKey(
+        'Product', on_delete=models.SET_NULL, null=True, blank=True, related_name='subproduct'
+    )
+
     def __str__(self):
         return f'{self.pk}. {self.name}'
 
@@ -44,14 +47,6 @@ class ProductDetail(CreateUpdateProxy):
     attachment = models.URLField(verbose_name="attachment link", null=True, blank=True)
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-
-
-class SubProduct(CreateUpdateProxy):
-    name = models.CharField(max_length=100, unique=True, null=False)
-    description = models.TextField(null=True, blank=True)
-    is_active = models.BooleanField(default=True, null=False, blank=False)
-
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, limit_choices_to={"is_active": True})
 
 
 class ProductProblem(CreateUpdateProxy):
@@ -74,6 +69,9 @@ class Ticket(CreateUpdateProxy):
     question = models.TextField(blank=False, null=False)
 
     is_solved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.id}. {self.question[:30]}..."
 
 
 class TicketMedia(CreateUpdateProxy):
