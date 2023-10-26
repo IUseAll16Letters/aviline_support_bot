@@ -52,6 +52,10 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
                 support_reachable=True,
                 row_col=(2, 2),
             )
+        elif template == "product_description.html":
+            keyboard = get_inline_keyboard_builder(
+                support_reachable=True,
+            )
 
         elif template == 'warranty_confirm_entry.html':
             keyboard = get_inline_keyboard_builder(
