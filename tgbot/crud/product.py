@@ -1,11 +1,10 @@
-__all__ = ("ProductRelatedQueries", )
+__all__ = ("ProductRelatedQueries",)
 
-from sqlalchemy import select, Sequence, func, column, and_
+from sqlalchemy import select, Sequence, func, column
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
 from tgbot.models import Product, ProductDetail
-from tgbot.crud import get_product_problems
 
 
 class ProductRelatedQueries:
@@ -34,8 +33,12 @@ class ProductRelatedQueries:
         """Count amount of sub products for selected product by prod name taken from query"""
         prod_alias = aliased(Product)
         stmt = select(func.count(prod_alias.name)) \
-            .where(Product.name == prod_name).join(Product.subproduct.of_type(prod_alias)) \
-            .where(prod_alias.is_subproduct_of_id == Product.id)
+            .join(Product.subproduct.of_type(prod_alias)) \
+            .filter(
+                Product.name == prod_name,
+                prod_alias.is_active == 1,
+                prod_alias.is_subproduct_of_id == Product.id,
+        )
         result = await self.db_session.execute(stmt)
         data = result.first()
         return data[0]
@@ -44,7 +47,11 @@ class ProductRelatedQueries:
         """Get all sub products for selected product by prod name taken from query"""
         prod_alias = aliased(Product)
         stmt = select(prod_alias.name) \
-            .where(Product.name == prod_name).join(Product.subproduct.of_type(prod_alias)) \
-            .where(prod_alias.is_subproduct_of_id == Product.id)
+            .join(Product.subproduct.of_type(prod_alias)) \
+            .filter(
+                Product.name == prod_name,
+                prod_alias.is_active == 1,
+                prod_alias.is_subproduct_of_id == Product.id,
+        )
         result = await self.db_session.execute(stmt)
         return result.scalars().all()

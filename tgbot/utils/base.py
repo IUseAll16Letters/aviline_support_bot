@@ -1,5 +1,6 @@
 __all__ = ("edit_base_message", "get_client_message", "parse_message_media",
-           "on_startup", "on_shutdown", "add_caption_to_media", "get_media_type",
+           "webhook_on_startup", "polling_on_startup", "webhook_on_shutdown", "polling_on_shutdown",
+           "add_caption_to_media", "get_media_type",
            "download_file_from_telegram_file_id", "get_allowed_media_id")
 
 from pathlib import Path
@@ -10,17 +11,41 @@ from aiogram import Bot
 from aiogram.types import Message, InputMediaVideo, InputMediaPhoto, InputMediaDocument, InputMediaAudio, CallbackQuery
 from aiogram.utils.keyboard import KeyboardBuilder
 
-from config.settings import WARRANTY_CARDS_LOCATION
 from tgbot.constants import MIME_TYPES_ALLOWED, MEDIA_TYPES
 from tgbot.types import Media, Optional_Media
+from tgbot.logging_config import utils_logger
+
+from config import settings
 
 
-async def on_startup(bot: Bot) -> None:
-    print('starting', bot)
+async def webhook_on_startup(bot: Bot) -> None:
+    """Initing webhook, bot: inited bot instance with attached token"""
+    webhook_is_set = await bot.set_webhook(
+        url=f"{settings.BASE_WEBHOOK_URL}{settings.WEBHOOK_PATH[1:]}",
+        drop_pending_updates=True,
+        secret_token=settings.WEBHOOK_SECRET,
+    )
+    utils_logger.debug(msg=f'Webhook was successfully set for {bot.id}: {webhook_is_set}. Starting in WEBHOOK mode')
 
 
-async def on_shutdown(bot: Bot) -> None:
-    print('Stopping', bot)
+async def polling_on_startup(bot: Bot) -> None:
+    utils_logger.debug(msg=f'Starting Bot(id={bot.id}) in POLLING mode')
+
+
+async def webhook_on_shutdown(bot: Bot) -> None:
+    """Stopping webhook, bot: bot instance in webhook mode"""
+    try:
+        webhook_was_stopped = await bot.delete_webhook(drop_pending_updates=True)
+        utils_logger.debug(msg=f'Webhook bot {bot.id} was successfully stopped: {webhook_was_stopped}')
+    except Exception as e:
+        utils_logger.warning(msg=f"Could not stop WEBHOOK for {bot.id}. {e}")
+
+
+async def polling_on_shutdown(bot: Bot) -> None:
+    try:
+        utils_logger.debug(msg=f'Bot {bot.id} was successfully stopped at POLLING mode')
+    except Exception as e:
+        utils_logger.warning(msg=f"Could not stop WEBHOOK for {bot.id}. {e}")
 
 
 async def edit_base_message(message: Message, text: str, keyboard: KeyboardBuilder) -> None:
@@ -32,10 +57,7 @@ async def edit_base_message(message: Message, text: str, keyboard: KeyboardBuild
     if isinstance(keyboard, KeyboardBuilder):
         keyboard = keyboard.as_markup()
 
-    await message.edit_text(
-        text=text,
-        reply_markup=keyboard
-    )
+    await message.edit_text(text=text, reply_markup=keyboard)
 
 
 def get_client_message(message: Message) -> Optional[str]:
@@ -113,7 +135,7 @@ async def download_file_from_telegram_file_id(bot_instance: Bot, telegram_file_i
     f = await bot_instance.get_file(telegram_file_id)
     dt = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
     user_file_name = f"{telegram_user_id}_{dt}.jpg"
-    full_file_name = str(Path(WARRANTY_CARDS_LOCATION) / user_file_name)
+    full_file_name = str(Path(settings.WARRANTY_CARDS_LOCATION) / user_file_name)
     # print(f'warranty: {full_file_name = }')
     await bot_instance.download_file(f.file_path, destination=full_file_name)
     return full_file_name

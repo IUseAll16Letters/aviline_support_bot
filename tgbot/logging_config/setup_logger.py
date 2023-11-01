@@ -1,4 +1,4 @@
-__all__ = ("waster_queries", "navigation", "mailing", "database")
+__all__ = ("waster_queries", "navigation", "mailing", "database", "utils_logger")
 
 import logging
 import logging.handlers as handlers
@@ -11,10 +11,14 @@ from config.settings import DEBUG
 
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.WARNING)
 base_logger = logging.Logger(name='tgbot', level=logging.DEBUG if DEBUG else logging.WARNING)
+
+utils_logger = base_logger.getChild("utils")
+utils_logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+
 waster_queries = base_logger.getChild("wasted_basic_logger")
 waster_queries.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
-navigation = base_logger.getChild("navigation_logger")
+navigation = base_logger.getChild("navigation")
 navigation.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
 mailing = base_logger.getChild("mailing")
@@ -38,6 +42,7 @@ event.addHandler(file_rotation_handler)
 dispatcher.addHandler(file_rotation_handler)
 middlewares.addHandler(file_rotation_handler)
 
+utils_logger.addHandler(file_rotation_handler)
 waster_queries.addHandler(file_rotation_handler)
 navigation.addHandler(file_rotation_handler)
 mailing.addHandler(file_rotation_handler)
