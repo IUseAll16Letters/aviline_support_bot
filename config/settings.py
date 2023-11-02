@@ -23,6 +23,12 @@ load_dotenv(BASE_DIR / "config" / '.env')
 TG_BOT_TOKEN = os.getenv("BOT_TOKEN")
 SECRET_KEY = os.getenv("SECRET_KEY")
 
+WEB_SERVER_HOST = os.getenv("WEB_SERVER_HOST")
+WEB_SERVER_PORT = os.getenv("WEB_SERVER_PORT")
+BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL")
+WEBHOOK_PATH = os.getenv("WEBHOOK_PATH")
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+
 DEBUG = os.getenv("DEBUG")
 
 ALLOWED_HOSTS = []
@@ -104,11 +110,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 STATIC_URL = 'static/'
@@ -139,6 +142,7 @@ SMTP_MAIL_PARAMS = {
     'password': EMAIL_HOST_PASSWORD,
     'port': EMAIL_PORT,
 }
+
 #
 # LOGGING = {
 #     'version': 1,

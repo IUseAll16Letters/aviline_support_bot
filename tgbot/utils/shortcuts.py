@@ -17,7 +17,7 @@ async def recursive_scout_products(callback_query: CallbackQuery, state: FSMCont
         if sub_products:
             sub_products = await ProductRelatedQueries(db_session).get_sub_products(data["product"])
             await state.set_state(PurchaseState.select_sub_product)
-            text = render_template('sub_products_list.html', values=data    )
+            text = render_template('sub_products_list.html', values=data)
             await edit_base_message(
                 message=callback_query.message,
                 text=text,
