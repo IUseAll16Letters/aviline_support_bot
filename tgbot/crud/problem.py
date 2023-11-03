@@ -14,7 +14,10 @@ async def get_product_problems(db_session: AsyncSession, product: str) -> Sequen
     :param db_session: AsyncSession as db_session from middleware DbSessionMiddleware
     :param product: str prod name
     """
-    stmt = select(ProductProblem.title).join_from(ProductProblem, Product).where(Product.name == product)
+    stmt = select(ProductProblem.title).join_from(ProductProblem, Product).filter(
+        Product.name == product,
+        Product.is_active == 1,
+    )
     result = await db_session.execute(stmt)
 
     return result.scalars().all()
@@ -29,7 +32,10 @@ async def get_problem_solution(db_session: AsyncSession, product: str, problem_o
     """
     stmt = select(ProductProblem.title, ProductProblem.solution, ProductProblem.attachment)\
         .join_from(ProductProblem, Product)\
-        .where(Product.name == product)
+        .filter(
+        Product.name == product,
+        Product.is_active == 1,
+    )
     result = await db_session.execute(stmt)
 
     return result.fetchall()[problem_order]

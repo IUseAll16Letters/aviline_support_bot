@@ -10,60 +10,64 @@ from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.models import Ticket
 from tgbot.states import ContactSupportState
 from tgbot.constants import CLEAN_PHONE_PATTERN, GET_PHONE_PATTERN, GET_EMAIL_PATTERN, GET_NAME_PATTERN, \
-    CONFIRMATION_MESSAGE, AVILINE_CHAT_ID
-from tgbot.utils import render_template, get_client_message, parse_message_media, edit_base_message, \
-    add_caption_to_media
-
+    CONFIRMATION_MESSAGE, AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID
+from tgbot.utils import render_template, get_client_message, parse_message_media, edit_base_message
+from tgbot.logging_config import handlers_logger
+from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
+from tgbot.filters import AvilineSupportChatFilter
 
 router = Router()
 
 
 @router.callback_query(F.data == 'contact_support')
-async def user_enters_name(callback_query: CallbackQuery, state: FSMContext) -> None:
+async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
     """Contact support initial message, client must enter valid name
-    state before: Any
-    state after: Contact -> enter_name
-    after message input - it must be removed in order to save client's chat space and convenience"""
-    data = await state.update_data({"message": callback_query.message})
-    await state.set_state(ContactSupportState.enter_name)
+    state before: purchase / support branch end
+    state after: Contact -> enter_name"""
+    data = await refresh_message_data_from_callback_query(callback_query, state)
     text = render_template('client_enter_name.html', values=data)
+    await state.set_state(ContactSupportState.enter_name)
     await edit_base_message(
-        message=callback_query.message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
-        keyboard=get_inline_keyboard_builder()
+        keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
 
 
 @router.message(F.text.regexp(GET_NAME_PATTERN), ContactSupportState.enter_name)
-async def user_enters_contact(message: Message, state: FSMContext):
+async def user_enters_contact(message: Message, state: FSMContext, bot: Bot):
     """Client must enter valid contact (email/phone)
     state before: Contact -> enter_name
     state after: Contact -> enter_name -> enter_contact
     after message input - it must be removed in order to save client's chat space and convenience"""
-    await state.set_state(ContactSupportState.enter_contact)
     data = await state.update_data({"username": message.text})
-    state_data = await state.get_data()
-    core_message: Message = state_data['message']
     text = render_template('client_enter_contact.html', values=data)
+    await state.set_state(ContactSupportState.enter_contact)
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
     await message.delete()
 
 
 @router.message(ContactSupportState.enter_name)
-async def user_sent_bad_name(message: Message, state: FSMContext):
+async def user_sent_bad_name(message: Message, state: FSMContext, bot: Bot):
     """Client enter invalid name that has numbers or symbols
     FIGURE OUT IF IT IS NEEDED AT ALL"""
-    state_data = await state.get_data()
-    core_message: Message = state_data['message']
-    text = f'По каким-то приичнам {message.text} - невалидное имя. Попробуйте ещё раз (a-z, а-я)'
+    data = await state.get_data()
+    text = f'По каким-то приичнам {message.text} - невалидное имя.\n' \
+           f'Попробуйте ещё раз (Разрешены бкувы латинского и кириллического алфавитов)'
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
     await message.delete()
 
@@ -73,40 +77,42 @@ async def user_sent_bad_name(message: Message, state: FSMContext):
     F.text.func(lambda s: re.search(GET_PHONE_PATTERN, re.sub(CLEAN_PHONE_PATTERN, '', s)) is not None) |
     F.text.func(lambda s: re.search(GET_EMAIL_PATTERN, s.strip()) is not None),
 )
-async def user_sent_valid_contact(message: Message, state: FSMContext):
+async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot):
     """Client must enter valid contact (email/phone)
     state before: Contact -> enter_name -> enter_contact
     state after: Contact -> enter_name -> enter_contact -> enter_message
     """
-    await state.set_state(ContactSupportState.enter_message)
     await state.update_data({'user_contact': message.text})
     data = await state.get_data()
-    core_message: Message = data['message']
     text = render_template('client_enter_message.html', values=data)
+    await state.set_state(ContactSupportState.enter_message)
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
     await message.delete()
 
 
 @router.message(ContactSupportState.enter_contact)
-async def user_sent_invalid_contact(message: Message, state: FSMContext):
+async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bot):
     await state.update_data({'user_contact': message.text})
     data = await state.get_data()
-    core_message: Message = data['message']
     text = render_template('client_bad_contact.html', values=data)
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
     await message.delete()
 
 
 @router.message(ContactSupportState.enter_message)
-async def user_sent_message_or_media(message: Message, state: FSMContext):
+async def user_sent_message_or_media(message: Message, state: FSMContext, bot: Bot):
     """Confirmation of clients input data
         state before: Contact -> enter_name -> enter_contact -> enter_message
         state after: Contact -> enter_name -> enter_contact -> enter_message -> entry_confirmation
@@ -114,15 +120,14 @@ async def user_sent_message_or_media(message: Message, state: FSMContext):
     data = await state.get_data()
 
     user_message = data.get('user_message')
+    new_user_message = get_client_message(message)
 
     if user_message is None:
-        data['user_message'] = get_client_message(message)
+        data['user_message'] = new_user_message
     else:
-        new_message = get_client_message(message)
-        if new_message:
-            data['user_message'] += f'\n{new_message}'
+        data['user_message'] = f'{user_message}\n{new_user_message}' if new_user_message else user_message
 
-    media_is_document, new_media = parse_message_media(message)
+    new_media = parse_message_media(message)
     if new_media is not None:
         data['user_media'] = data.get('user_media', [])
         data['user_media'].append(new_media)
@@ -131,7 +136,6 @@ async def user_sent_message_or_media(message: Message, state: FSMContext):
     await state.update_data(data)
 
     try:
-        core_message: Message = data['message']
         text = render_template('client_message_confirm.html', values=data)
 
         if data['user_message'] is None:
@@ -139,12 +143,15 @@ async def user_sent_message_or_media(message: Message, state: FSMContext):
         else:
             kb = get_inline_keyboard_builder(iterable=[CONFIRMATION_MESSAGE, ], )
         await edit_base_message(
-            message=core_message,
+            chat_id=data['chat_id'],
+            message_id=data['message_id'],
             text=text,
             keyboard=kb,
+            bot=bot,
         )
     except Exception as e:
-        print(f'\033[35;4m{e}\033[0m')
+        msg = f"Error while adding a message and media. ERR: {e}"
+        handlers_logger.error(msg=msg)
 
     await message.delete()
 
@@ -158,75 +165,83 @@ async def user_confirmed_message(
     data['user_telegram_id'] = callback_query.from_user.id
 
     user_message = data['user_message']
-    user_telegram_id = data['user_telegram_id']
-
     ticket: Ticket = await TicketRelatedQueries(db_session).create_ticket(
         question=user_message,
-        user_telegram_id=user_telegram_id,
+        user_telegram_id=data['user_telegram_id'],
     )
     media = data.get('user_media')
+    aviline_chat_id = AVILINE_MANAGER_CHAT_ID if data['branch'] == 'purchase' else AVILINE_TECH_CHAT_ID
 
+    ticket_related_messages = []
     if media:
-        add_caption_to_media(media, user_message)
-        media_to_send = [i for i in media if isinstance(i, (InputMediaPhoto, InputMediaVideo))]
-        documents_to_send = [i for i in media if isinstance(i, InputMediaDocument)]
-        audio_to_send = [i for i in media if isinstance(i, InputMediaAudio)]
+        m, a, d = [], [], []
+        for i in media:
+            prefix, file_id = i.split('%%')
+            if prefix == 'video' or prefix == 'img':
+                m.append(InputMediaVideo(media=file_id) if prefix == 'video' else InputMediaPhoto(media=file_id))
+            elif prefix == 'audio':
+                a.append(InputMediaAudio(media=file_id))
+            elif prefix == 'document':
+                d.append(InputMediaDocument(media=file_id))
 
-        messages = []
-        if media_to_send:
-            messages.extend(await bot.send_media_group(chat_id=AVILINE_CHAT_ID, media=media_to_send))
+        if m:
+            ticket_related_messages.extend(await bot.send_media_group(chat_id=aviline_chat_id, media=m))
 
-        if documents_to_send:
-            messages.extend(await bot.send_media_group(chat_id=AVILINE_CHAT_ID, media=documents_to_send))
+        if d:
+            ticket_related_messages.extend(await bot.send_media_group(chat_id=aviline_chat_id, media=d))
 
-        if audio_to_send:
-            messages.extend(await bot.send_media_group(chat_id=AVILINE_CHAT_ID, media=audio_to_send))
+        if a:
+            ticket_related_messages.extend(await bot.send_media_group(chat_id=aviline_chat_id, media=a))
 
-        saved_medias = await TicketRelatedQueries(db_session).create_user_media_attached(
+        del m, a, d
+
+        await TicketRelatedQueries(db_session).create_user_media_attached(
             media=media,
             ticket_id=ticket.id,
         )
 
-    else:
-        messages = [await bot.send_message(
-            chat_id=AVILINE_CHAT_ID,
-            text=user_message,
-        )]
+    ticket_related_messages.append(await bot.send_message(chat_id=aviline_chat_id, text=user_message))
 
-    saved_messages = await TicketRelatedQueries(db_session).create_ticket_message(
-        messages=messages,
+    await TicketRelatedQueries(db_session).create_ticket_message(
+        messages=ticket_related_messages,
         ticket_id=ticket.id,
     )
 
     await db_session.commit()
-
-    core_message: Message = data['message']
     text = render_template('message_sent_success.html', values=data)
-
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
     await state.clear()
 
 
-@router.message(F.chat.id == AVILINE_CHAT_ID)
-async def hostage_message(message: Message, state: FSMContext, db_session: AsyncSession, bot: Bot):
-    if message.reply_to_message:
-        quoted_message = message.reply_to_message.message_id
-        ticket = await TicketRelatedQueries(db_session).get_customer_id_from_message(
-            message_id=quoted_message,
-        )
+@router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}, check_is_reply=True))
+async def reply_in_aviline_chat(message: Message, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
+    quoted_message = message.reply_to_message.message_id
+    ticket = await TicketRelatedQueries(db_session).get_customer_id_from_message(
+        message_id=quoted_message,
+    )
+    if ticket is None:
+        return
+    else:
         response = await bot.send_message(
             chat_id=ticket.customer,
-            text=f"Your question was: {ticket.question}\n"
-                 f"Your answer is: {message.text}",
+            text=f"Добрый день! "
+                 f"Вы отправляли заявку в техподдержку:\n"
+                 f"{ticket.question}\n"
+                 f"Ответ нашего специалиста:\n{message.text}",
         )
         if response:
-            closed = await TicketRelatedQueries(db_session).close_ticket(
+            await TicketRelatedQueries(db_session).close_ticket(
                 ticket_id=ticket.id,
             )
         await db_session.commit()
-    else:
-        await message.reply(text=f"Полегче на поворотах, господа. {message.chat.id}")
+
+
+@router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}))
+async def other_trash_talk(message: Message) -> None:
+    ...

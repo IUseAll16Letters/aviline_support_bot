@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tgbot.constants import AVAILABLE_SERVICES, CONFIRMATION_MESSAGE
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils.template_engine import render_template
-from tgbot.crud import ProductRelatedQueries, get_product_problems, create_visitor
+from tgbot.crud import ProductRelatedQueries, get_product_problems
 from tgbot.navigation import Navigation, template_from_state
 from tgbot.logging_config import navigation
 
@@ -16,8 +16,9 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def handle_start(message: Message, db_session: AsyncSession) -> None:
-    """/start command handler, no state, no db_access"""
+async def handle_start(message: Message, db_session: AsyncSession, state: FSMContext) -> None:
+    """/start command handler, clear state, no db_access"""
+    await state.clear()
     keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True, row_col=(2, 1))
     text = render_template('start.html')
     await message.answer(
@@ -29,8 +30,8 @@ async def handle_start(message: Message, db_session: AsyncSession) -> None:
 @router.callback_query(F.data == 'back')
 async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession) -> None:
     """
-    Navigation reversing logic that hooks "back" callback_query based on states and templates related to current state.
-    Returns to base welcome message (/start) in case no state set.
+    Navigation reversing logic that hooks "back" callback_query based on states and state related template.
+    Returns to base welcome message (/start) in case no state found.
     Node tree implementation using dfs with states as Node value and next/prev as parent/child Nodes
     """
     try:

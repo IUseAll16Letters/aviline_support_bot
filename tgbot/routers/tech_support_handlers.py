@@ -1,4 +1,4 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -7,65 +7,76 @@ from tgbot.states import TechSupportState
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils import edit_base_message, render_template
 from tgbot.crud import get_product_problems, get_problem_solution, ProductRelatedQueries
+from tgbot.logging_config import database
+from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
 
 router = Router()
 
 
 @router.callback_query(F.data == 'support')
-async def support_selected(
-        callback_query: CallbackQuery,
-        state: FSMContext,
-        db_session: AsyncSession
-) -> None:
-    await state.set_state(TechSupportState.select_product)
-    data = await state.update_data({"branch": "support"})
+async def select_product(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
+    data = await refresh_message_data_from_callback_query(callback_query, state, branch="support")
     text = render_template('products_list.html', data)
     available_products = await ProductRelatedQueries(db_session).get_all_products()
-
+    await state.set_state(TechSupportState.select_product)
     await edit_base_message(
-        message=callback_query.message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(available_products, row_col=(1, 1)),
+        bot=bot,
     )
 
 
 @router.callback_query(F.data != 'back', TechSupportState.select_product)
-async def get_product_problems_handler(
-        callback_query: CallbackQuery,
-        state: FSMContext,
-        db_session: AsyncSession
-) -> None:
-    await state.set_state(TechSupportState.product_problems)
-    data = await state.update_data({"product": callback_query.data})
+async def product_problems(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
+    data = await refresh_message_data_from_callback_query(callback_query, state, product=callback_query.data)
+
     problems = await get_product_problems(db_session, callback_query.data)
     data['problems'], data['enumerate'] = problems, enumerate
-
     text = render_template('product_problems.html', values=data)
     keyboard = get_inline_keyboard_builder(
         [str(i) for i in range(1, len(data['problems']) + 1)],
         support_reachable=True,
     )
+    await state.set_state(TechSupportState.product_problems)
     await edit_base_message(
-        message=callback_query.message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=keyboard,
+        bot=bot,
     )
 
 
 @router.callback_query(F.data.regexp(r'\d+'), TechSupportState.product_problems)
-async def get_problem_solution_by_number(
-        callback_query: CallbackQuery,
-        state: FSMContext,
-        db_session: AsyncSession
-) -> None:
-    await state.set_state(TechSupportState.problem_details)
-    data = await state.get_data()
-    solution = await get_problem_solution(db_session, data['product'], int(callback_query.data) - 1)
-    data['problem'], data['solutions'], data['attachments'] = solution.title, solution.solution.split("\n"), solution.attachment
+async def problem_solution(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
+    data = await refresh_message_data_from_callback_query(callback_query, state)
+
+    try:
+        solution = await get_problem_solution(db_session, data['product'], int(callback_query.data) - 1)
+        data['problem'] = solution.title
+        data['solutions'] = solution.solution.split("\n")
+        data['attachments'] = solution.attachment
+
+    except KeyError as e:
+        msg = f'Key not found in Storage items. {e}'
+        database.error(msg=msg)
+        await callback_query.answer(f"Ошибка исполнения запроса к стороннему сервису. Пожалуйста подождите")
+        return
+
+    except IndexError as e:
+        msg = f'Product{callback_query.data} has been removed or deactivated during session. ERR: {e}'
+        database.error(msg=msg)
+        await callback_query.answer("Продукт, который вы выбрали, был удален.\nПриносим извинения.")
+        return
 
     text = render_template('product_problem_solution.html', values=data)
+    await state.set_state(TechSupportState.problem_details)
     await edit_base_message(
-        message=callback_query.message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(support_reachable=True),
+        bot=bot,
     )

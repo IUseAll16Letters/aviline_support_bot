@@ -20,23 +20,25 @@ class TicketRelatedQueries:
         """Create ticket after client confirmed. 1st in chain"""
         stmt = insert(Ticket)\
             .values(
-            question=question,
-            customer=user_telegram_id,
-            created_at=created_at or datetime.now())\
+                question=question,
+                customer=user_telegram_id,
+                created_at=created_at or datetime.now())\
             .returning(Ticket.id)
 
         res = await self.db_session.execute(stmt)
         return res.first()
 
-    async def create_user_media_attached(self, media: List[Media], ticket_id: int) -> None:
+    async def create_user_media_attached(self, media: List[str], ticket_id: int) -> None:
         """Attach media to ticket if it exists"""
-        medias = [
-            {
-                "telegram_id": media_file.media,
-                "media_type": get_media_type(media_file),
+        medias = []
+        for m in media:
+            prefix, file_id = m.split("%%")
+            medias.append({
+                'telegram_id': file_id,
+                'media_type': get_media_type(prefix),
                 "ticket_id": ticket_id,
-            } for media_file in media
-        ]
+            })
+
         stmt = insert(TicketMedia).values(medias).returning(TicketMedia.id)
         res = await self.db_session.execute(stmt)
         return res

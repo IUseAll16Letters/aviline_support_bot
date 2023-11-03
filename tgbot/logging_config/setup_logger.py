@@ -1,4 +1,4 @@
-__all__ = ("waster_queries", "navigation", "mailing", "database", "utils_logger")
+__all__ = ('redis_logger', 'utils_logger', 'handlers_logger', 'waster_queries', 'navigation', 'mailing', 'database')
 
 import logging
 import logging.handlers as handlers
@@ -12,19 +12,25 @@ from config.settings import DEBUG
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.WARNING)
 base_logger = logging.Logger(name='tgbot', level=logging.DEBUG if DEBUG else logging.WARNING)
 
-utils_logger = base_logger.getChild("utils")
+redis_logger = base_logger.getChild('redis')
+redis_logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+
+utils_logger = base_logger.getChild('utils')
 utils_logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
-waster_queries = base_logger.getChild("wasted_basic_logger")
+handlers_logger = base_logger.getChild('handlers')
+handlers_logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+
+waster_queries = base_logger.getChild('wasted_basic')
 waster_queries.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
-navigation = base_logger.getChild("navigation")
+navigation = base_logger.getChild('navigation')
 navigation.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
-mailing = base_logger.getChild("mailing")
+mailing = base_logger.getChild('mailing')
 mailing.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
-database = base_logger.getChild("database")
+database = base_logger.getChild('database')
 mailing.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
 
 file_rotation_handler = handlers.TimedRotatingFileHandler(
@@ -34,7 +40,7 @@ file_rotation_handler = handlers.TimedRotatingFileHandler(
     when='midnight',
     backupCount=7,
 )
-file_rotation_formatter = logging.Formatter("%(asctime)s %(levelname)s:%(name)s: %(message)s")
+file_rotation_formatter = logging.Formatter('%(asctime)s %(levelname)s:%(name)s: %(message)s')
 file_rotation_handler.setLevel(logging.INFO)
 file_rotation_handler.setFormatter(file_rotation_formatter)
 
@@ -42,8 +48,10 @@ event.addHandler(file_rotation_handler)
 dispatcher.addHandler(file_rotation_handler)
 middlewares.addHandler(file_rotation_handler)
 
+redis_logger.addHandler(file_rotation_handler)
 utils_logger.addHandler(file_rotation_handler)
 waster_queries.addHandler(file_rotation_handler)
 navigation.addHandler(file_rotation_handler)
 mailing.addHandler(file_rotation_handler)
 database.addHandler(file_rotation_handler)
+handlers_logger.addHandler(file_rotation_handler)

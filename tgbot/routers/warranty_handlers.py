@@ -2,6 +2,7 @@ import os
 import aiofiles
 
 from os.path import basename
+
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -11,93 +12,102 @@ from config.settings import SMTP_MAIL_PARAMS
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import WarrantyState
 from tgbot.utils import render_template, edit_base_message, get_client_message, \
-    send_email_to_aviline, download_file_from_telegram_file_id
-from tgbot.utils.base import get_allowed_media_id
+    send_email_to_aviline, download_file_from_telegram_file_id, get_allowed_media_id
+from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
 from tgbot.logging_config import mailing
+
 
 router = Router()
 
 
 @router.callback_query(F.data == 'warranty')
-async def start_enter_problem(callback_query: CallbackQuery, state: FSMContext):
+async def start_enter_problem(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     """ask to describe problem"""
-    await state.set_state(WarrantyState.describe_problem)
-    data = await state.update_data({"message": callback_query.message})
+    data = await refresh_message_data_from_callback_query(callback_query, state)
     text = render_template('warranty_describe_problem.html')
+    await state.set_state(WarrantyState.describe_problem)
     await edit_base_message(
-        message=callback_query.message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
 
 
 @router.message(WarrantyState.describe_problem)
-async def enter_purchase_location(message: Message, state: FSMContext):
+async def enter_purchase_location(message: Message, state: FSMContext, bot: Bot):
     """ask to enter where buy product"""
-    await state.set_state(WarrantyState.where_when_buy)
     data = await state.update_data({"client_problem": message.text})  # if not message text: raise error
     text = render_template('warranty_where_when_buy.html')
-    core_message: Message = data['message']
+    await state.set_state(WarrantyState.where_when_buy)
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
     await message.delete()
 
 
 @router.message(WarrantyState.where_when_buy)
-async def enter_client_location(message: Message, state: FSMContext):
+async def enter_client_location(message: Message, state: FSMContext, bot: Bot):
     """ask to enter his location"""
-    await state.set_state(WarrantyState.location)
     data = await state.update_data({"client_where_buy": message.text})  # if not message text: raise error
     text = render_template('warranty_location.html')
-    core_message: Message = data['message']
+
+    await state.set_state(WarrantyState.location)
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
     await message.delete()
 
 
 @router.message(WarrantyState.location)
-async def enter_car_brand(message: Message, state: FSMContext):
+async def enter_car_brand(message: Message, state: FSMContext, bot: Bot):
     """enters his car brand"""
     await state.set_state(WarrantyState.car_brand)
     data = await state.update_data({"client_city": message.text})  # if not message text: raise error
     text = render_template('warranty_client_car.html')
-    core_message: Message = data['message']
+    
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
     await message.delete()
 
 
 @router.message(WarrantyState.car_brand)
-async def confirm_warranty_entry(message: Message, state: FSMContext):
+async def confirm_warranty_entry(message: Message, state: FSMContext, bot: Bot):
     """confirms all data correct"""
     await state.set_state(WarrantyState.confirm_entry)
     data = await state.update_data({"client_car": message.text})
     text = render_template("warranty_confirm_entry.html", values=data)
-    core_message: Message = data['message']
+    
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
-        keyboard=get_inline_keyboard_builder([CONFIRMATION_MESSAGE, ])
+        keyboard=get_inline_keyboard_builder([CONFIRMATION_MESSAGE, ]),
+        bot=bot,
     )
     await message.delete()
 
 
 @router.callback_query(F.data == CONFIRMATION_MESSAGE, WarrantyState.confirm_entry)
-async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FSMContext):
+async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     """confirmed input data correct, now enter contact + warranty card"""
     await state.set_state(WarrantyState.approval_docs_contact)
     data = await state.get_data()
     text = render_template('warranty_enter_approval_docs.html', values=data)
-    core_message: Message = data['message']
 
     file_id, user_message = data.get('user_warranty_message'), data.get('user_warranty_card')
     iterable = {}
@@ -109,15 +119,17 @@ async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FS
         iterable.update(WARRANTY_CONFIRM_MAIL)
 
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(iterable=iterable, row_col=(1, 1)),
+        bot=bot,
     )
     del iterable
 
 
 @router.message(WarrantyState.approval_docs_contact)
-async def client_need_to_confirm(message: Message, bot: Bot, state: FSMContext):
+async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
     """enters his contacts and approval contact after callback"""
     data = await state.get_data()
 
@@ -145,23 +157,27 @@ async def client_need_to_confirm(message: Message, bot: Bot, state: FSMContext):
         iterable.update(WARRANTY_CHANGE_CARD)
 
     data = await state.update_data(data)
-    core_message: Message = data['message']
+    
     text = render_template("warranty_enter_approval_docs.html", values=data)
     if file_id is not None and user_message is not None:
         iterable.update(WARRANTY_CONFIRM_MAIL)
 
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
-        keyboard=get_inline_keyboard_builder(iterable=iterable, row_col=(1, 1))
+        keyboard=get_inline_keyboard_builder(iterable=iterable, row_col=(1, 1)),
+        bot=bot,
     )
 
     await message.delete()
 
 
-@router.callback_query(F.data.in_(("change_warranty_card", "change_client_contact")),
-                       WarrantyState.approval_docs_contact)
-async def clear_field(callback_query: CallbackQuery, state: FSMContext):
+@router.callback_query(
+    F.data.in_(("change_warranty_card", "change_client_contact")),
+    WarrantyState.approval_docs_contact,
+)
+async def clear_field(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     data = await state.get_data()
     if callback_query.data == "change_warranty_card":
         try:
@@ -182,23 +198,26 @@ async def clear_field(callback_query: CallbackQuery, state: FSMContext):
 
     data = await state.update_data(data)
     text = render_template("warranty_enter_approval_docs.html", values=data)
-    core_message: Message = data['message']
+    
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=text,
         keyboard=get_inline_keyboard_builder(iterable=iterable, row_col=(1, 1)),
+        bot=bot,
     )
     del iterable
 
 
 @router.callback_query(F.data == CONFIRMATION_MESSAGE, WarrantyState.approval_docs_contact)
-async def send_mail(callback_query: CallbackQuery, state: FSMContext):
+async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     data = await state.get_data()
-    core_message = data['message']
     await edit_base_message(
-        message=core_message,
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=render_template("warranty_message_is_sending.html"),
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
 
     text = render_template("warranty_email_template.html", values=data)
@@ -224,9 +243,11 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext):
         mailing.error(msg=msg)
 
     await edit_base_message(
-        message=data['message'],
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
         text=render_template("warranty_message_OK.html"),
         keyboard=get_inline_keyboard_builder(),
+        bot=bot,
     )
 
     await state.clear()

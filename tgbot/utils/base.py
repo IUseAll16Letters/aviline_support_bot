@@ -48,16 +48,16 @@ async def polling_on_shutdown(bot: Bot) -> None:
         utils_logger.warning(msg=f"Could not stop WEBHOOK for {bot.id}. {e}")
 
 
-async def edit_base_message(message: Message, text: str, keyboard: KeyboardBuilder) -> None:
-    """
-    :param message: Aiogram Message, base message to update text + inline keyboard
-    :param text: jinja2 rendered template as str (or any str)
-    :param keyboard: KeyboardBuilder/InlineKeyboard class - as reply_markup
-    """
+async def edit_base_message(chat_id: int, message_id: int, text: str, keyboard: KeyboardBuilder, bot: Bot) -> None:
     if isinstance(keyboard, KeyboardBuilder):
         keyboard = keyboard.as_markup()
 
-    await message.edit_text(text=text, reply_markup=keyboard)
+    await bot.edit_message_text(
+        chat_id=chat_id,
+        message_id=message_id,
+        text=text,
+        reply_markup=keyboard,
+    )
 
 
 def get_client_message(message: Message) -> Optional[str]:
@@ -67,41 +67,32 @@ def get_client_message(message: Message) -> Optional[str]:
     return user_message
 
 
-def parse_message_media(message: Message) -> Tuple[Optional[bool], Optional_Media]:
+def parse_message_media(message: Message) -> Optional[str]:
     """Parse client photo or video from message if there are any attached"""
     media_object = None
-    media_is_document = None
+
     if message.photo is not None:
-        media_object = message.photo[-1]
-        media_object = InputMediaPhoto(media=media_object.file_id)
-        media_is_document = 0
+        media_object = f"img%%{message.photo[-1].file_id}"
 
     elif message.video is not None or message.video_note is not None:
         media_object = message.video if message.video else message.video_note
-        media_object = InputMediaVideo(media=media_object.file_id)
-        media_is_document = message.video is None
+        media_object = f"video%%{media_object.file_id}"
 
     elif message.audio is not None or message.voice is not None:
         media_object = message.audio if message.audio else message.voice
-        media_object = InputMediaAudio(media=media_object.file_id)
-        media_is_document = 1
+        media_object = f"audio%%{media_object.file_id}"
 
     elif message.document is not None and message.document.mime_type in MIME_TYPES_ALLOWED:
-        if message.animation is not None:
-            return media_is_document, media_object
+        media_object = f"document%%{message.document.file_id}"
 
-        media_object = message.document.file_id
-        media_object = InputMediaDocument(media=media_object)
-        media_is_document = 1
-
-    return media_is_document, media_object
+    return media_object
 
 
-def get_media_type(media_file: Media):
-    media_type = MEDIA_TYPES.get(media_file.__class__)
+def get_media_type(media_prefix: str):
+    media_type = MEDIA_TYPES.get(media_prefix)
     if media_type is None:
         raise TypeError(
-            f"Type identification error for {media_file.media} {media_file.__class__}")  # TODO set correct error type
+            f"Type identification error for '{media_prefix}' {media_prefix.__class__}")  # TODO set correct error type
     return media_type
 
 

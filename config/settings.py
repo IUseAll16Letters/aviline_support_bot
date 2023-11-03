@@ -29,7 +29,7 @@ BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL")
 WEBHOOK_PATH = os.getenv("WEBHOOK_PATH")
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 
-DEBUG = os.getenv("DEBUG")
+DEBUG = int(os.getenv("DEBUG"))
 
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS.extend(os.getenv("ALLOWED_HOSTS").split(','))
@@ -142,6 +142,29 @@ SMTP_MAIL_PARAMS = {
     'password': EMAIL_HOST_PASSWORD,
     'port': EMAIL_PORT,
 }
+
+CACHE = {
+    1: {
+        "HOST": "127.0.0.1",
+        "PORT": 6379,
+        "DBS": {
+            'memstorage': 0,
+            'cache': 1,
+        }
+    },
+    0: {
+        "HOST": os.getenv('REDIS_HOST'),
+        "PORT": int(os.getenv("REDIS_PORT")),
+        "DBS": {
+            'memstorage': 0,
+            'cache': 1,
+        }
+    }
+}
+MEMSTORAGE_STATE_TTL = None
+MEMSTORAGE_DATA_TTL = None
+CACHE_IMAGE_TTL = None
+CACHE_SUPPORT_TTL = None
 
 #
 # LOGGING = {
