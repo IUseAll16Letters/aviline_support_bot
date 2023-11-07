@@ -10,6 +10,7 @@ from email.mime.application import MIMEApplication
 
 from config.settings import SMTP_MAIL_PARAMS, EMAIL_HOST_USER
 from tgbot.utils import render_template
+from tgbot.logging_config import mailing
 
 
 def compose_user_mail_text(data: Dict[str, str]):
@@ -33,10 +34,9 @@ async def send_email_to_aviline(subject, text, warranty_card: bytes, warranty_ba
     is_tls = SMTP_MAIL_PARAMS['tls']
     port = SMTP_MAIL_PARAMS['port']
 
-    part = MIMEApplication(warranty_card, Name=warranty_basename)
-    part['Content-Disposition'] = f'attachment; filename={warranty_basename}'
-
-    msg.attach(part)
+    image = MIMEApplication(warranty_card, basename=warranty_basename)
+    image['Content-Disposition'] = f'attachment; filename={warranty_basename}'
+    msg.attach(image)
 
     smtp = aiosmtplib.SMTP(hostname=host, port=port, use_tls=is_ssl)
 
@@ -46,4 +46,6 @@ async def send_email_to_aviline(subject, text, warranty_card: bytes, warranty_ba
         if 'user' in SMTP_MAIL_PARAMS:
             await connection.login(SMTP_MAIL_PARAMS['user'], SMTP_MAIL_PARAMS['password'])
         response = await connection.send_message(msg)
-        print(response)
+        msg = f"Mail sent with response: {response = }. "
+        mailing.info(msg=msg)
+

@@ -1,11 +1,14 @@
-from typing import Any
+__all__ = ("get_redis_storage", "get_redis_or_mem_storage")
 
+from typing import Union
+
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 from redis.asyncio.client import Redis
 from redis.exceptions import ConnectionError
 
 from config import settings
 from tgbot.logging_config import redis_logger
-from tgbot.types import KeyLike
 
 
 async def get_redis_storage():
@@ -26,3 +29,17 @@ async def get_redis_storage():
             redis_logger.critical(msg=f"Unknown exception handled: {e}")
 
     return None
+
+
+async def get_redis_or_mem_storage() -> Union[MemoryStorage, RedisStorage]:
+    redis = await get_redis_storage()
+    if redis is None:
+        storage = MemoryStorage()
+        redis_logger.info(msg='Redis connection is none - using MemoryStorage')
+    else:
+        storage = RedisStorage(
+            redis=redis,
+            state_ttl=settings.MEMSTORAGE_DATA_TTL,
+            data_ttl=settings.MEMSTORAGE_STATE_TTL,
+        )
+    return storage

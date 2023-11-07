@@ -13,7 +13,6 @@ from tgbot.logging_config import database as database_logging
 
 
 async def refresh_message_data_from_callback_query(callback_query: CallbackQuery, state: FSMContext, **kwargs) -> dict:
-    print(f'ffff {kwargs = }')
     data = await state.update_data(
         {
             "message_id": callback_query.message.message_id,

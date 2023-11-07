@@ -126,7 +126,7 @@ EMAIL_PORT = os.getenv('EMAIL_PORT')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_AVILINE_MAILBOX = os.getenv('EMAIL_AVILINE_MAILBOX')
-DEFAULT_SUBJECT = "Warranty from user - %u%, telegram_id(debug) - %tgi%"
+DEFAULT_SUBJECT = "Warranty from telegram user - %u%"
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
@@ -161,10 +161,12 @@ CACHE = {
         }
     }
 }
+
 MEMSTORAGE_STATE_TTL = None
 MEMSTORAGE_DATA_TTL = None
-CACHE_IMAGE_TTL = None
-CACHE_SUPPORT_TTL = None
+CACHE_IMAGE_TTL = 15 * 60
+CACHE_SUPPORT_TTL = 5 * 60
+MAX_WARRANTY_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # Max file size allowed for warranty card in bytes
 
 #
 # LOGGING = {

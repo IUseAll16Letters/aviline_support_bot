@@ -3,16 +3,15 @@ __all__ = ("edit_base_message", "get_client_message", "parse_message_media",
            "add_caption_to_media", "get_media_type",
            "download_file_from_telegram_file_id", "get_allowed_media_id")
 
-from pathlib import Path
-from typing import Optional, Tuple, List
-from datetime import datetime
+from typing import Optional, List, Union, Tuple
 
 from aiogram import Bot
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import Message, InputMediaVideo, InputMediaPhoto, InputMediaDocument, InputMediaAudio, CallbackQuery
 from aiogram.utils.keyboard import KeyboardBuilder
 
 from tgbot.constants import MIME_TYPES_ALLOWED, MEDIA_TYPES
-from tgbot.types import Media, Optional_Media
+from tgbot.types import Media
 from tgbot.logging_config import utils_logger
 
 from config import settings
@@ -51,13 +50,15 @@ async def polling_on_shutdown(bot: Bot) -> None:
 async def edit_base_message(chat_id: int, message_id: int, text: str, keyboard: KeyboardBuilder, bot: Bot) -> None:
     if isinstance(keyboard, KeyboardBuilder):
         keyboard = keyboard.as_markup()
-
-    await bot.edit_message_text(
-        chat_id=chat_id,
-        message_id=message_id,
-        text=text,
-        reply_markup=keyboard,
-    )
+    try:
+        await bot.edit_message_text(
+            chat_id=chat_id,
+            message_id=message_id,
+            text=text,
+            reply_markup=keyboard,
+        )
+    except TelegramBadRequest:
+        msg = f''
 
 
 def get_client_message(message: Message) -> Optional[str]:
@@ -105,28 +106,27 @@ def add_caption_to_media(media_files: List[Media], caption: str):
         media_files[0].caption = caption
 
 
-def get_allowed_media_id(message: Message):
-    # TODO FIX THIS MESS
-    file_id = None
-    try:
-        print(f'warranty: {message.document.mime_type = }')
-    except Exception:
-        ...
-    if message.photo or (message.document is not None and message.document.mime_type.startswith('image')):
-        if message.photo:
-            file_id = message.photo[-1].file_id
-        else:
-            file_id = message.document.file_id
+def get_allowed_media_id(message: Message) -> Union[Tuple[str, str], Tuple[int, int]]:
+    file_id = -2
+    extension = -2
 
-    return file_id
+    if message.photo is not None:
+        if message.photo[-1].file_size > settings.MAX_WARRANTY_IMAGE_SIZE_BYTES:
+            return -1, -1
+        file_id = message.photo[-1].file_id
+        extension = 'jpg'
+    elif message.document is not None and message.document.mime_type.startswith('image'):
+        if message.document.file_size > settings.MAX_WARRANTY_IMAGE_SIZE_BYTES:
+            return -1, -1
+        file_id = message.document.file_id
+        extension = message.document.mime_type.replace('image/', '')
+
+    return file_id, extension
 
 
-async def download_file_from_telegram_file_id(bot_instance: Bot, telegram_file_id: str, telegram_user_id: int) -> str:
-    """downloads file and returns its location"""
-    f = await bot_instance.get_file(telegram_file_id)
-    dt = datetime.now().strftime("%Y_%m_%d_%H_%M_%S_%f")
-    user_file_name = f"{telegram_user_id}_{dt}.jpg"
-    full_file_name = str(Path(settings.WARRANTY_CARDS_LOCATION) / user_file_name)
-    # print(f'warranty: {full_file_name = }')
-    await bot_instance.download_file(f.file_path, destination=full_file_name)
-    return full_file_name
+async def download_file_from_telegram_file_id(bot_instance: Bot, telegram_file_id: str) -> bytes:
+    """downloads file and returns it as bytes if filesize is < than settings.MAX_WARRANTY_IMAGE_SIZE_BYTES"""
+    f_id = await bot_instance.get_file(telegram_file_id)
+    file = await bot_instance.download_file(f_id.file_path)
+    file_as_bytes = file.read()
+    return file_as_bytes

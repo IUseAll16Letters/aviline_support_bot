@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, InputMediaPhoto, InputMediaDocument, InputMediaVideo, InputMediaAudio
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from tgbot.cache.shortcuts import RedisAdapter
 from tgbot.crud import TicketRelatedQueries
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.models import Ticket
@@ -21,9 +22,15 @@ router = Router()
 
 @router.callback_query(F.data == 'contact_support')
 async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
-    """Contact support initial message, client must enter valid name
-    state before: purchase / support branch end
-    state after: Contact -> enter_name"""
+    minutes, seconds = await RedisAdapter.check_lock_ttl(user_id=callback_query.from_user.id)
+
+    if minutes not in (-2, -1):
+        await callback_query.answer(
+            text=f"Вы можете создавать обращения не чаще чем 1 раз в 5 минут.\n"
+                 f"След. обращение воможно через: {minutes} мин, {seconds} сек."
+        )
+        return
+
     data = await refresh_message_data_from_callback_query(callback_query, state)
     text = render_template('client_enter_name.html', values=data)
     await state.set_state(ContactSupportState.enter_name)
@@ -217,29 +224,23 @@ async def user_confirmed_message(
         bot=bot,
     )
     await state.clear()
+    await RedisAdapter.set_lock(user_id=callback_query.from_user.id)
 
 
 @router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}, check_is_reply=True))
 async def reply_in_aviline_chat(message: Message, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
     quoted_message = message.reply_to_message.message_id
-    ticket = await TicketRelatedQueries(db_session).get_customer_id_from_message(
-        message_id=quoted_message,
-    )
+    ticket: Ticket = await TicketRelatedQueries(db_session).get_customer_id_from_message(message_id=quoted_message)
+
     if ticket is None:
         return
     else:
-        response = await bot.send_message(
-            chat_id=ticket.customer,
-            text=f"Добрый день! "
-                 f"Вы отправляли заявку в техподдержку:\n"
-                 f"{ticket.question}\n"
-                 f"Ответ нашего специалиста:\n{message.text}",
-        )
+        values = {"question": ticket.question, "answer": message.text}
+        text = render_template('reply_client_question.html', values=values)
+        response = await bot.send_message(chat_id=ticket.customer, text=text)
         if response:
-            await TicketRelatedQueries(db_session).close_ticket(
-                ticket_id=ticket.id,
-            )
-        await db_session.commit()
+            await TicketRelatedQueries(db_session).close_ticket(ticket_id=ticket.id)
+            await db_session.commit()
 
 
 @router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}))

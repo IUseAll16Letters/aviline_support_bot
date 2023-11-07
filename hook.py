@@ -9,7 +9,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
-from tgbot.cache.connection import get_redis_storage
+from tgbot.cache.connection import get_redis_storage, get_redis_or_mem_storage
 from tgbot.database import get_connection_pool
 from tgbot.middleware import DbSessionMiddleware
 from tgbot.utils import webhook_on_startup, webhook_on_shutdown
@@ -22,17 +22,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def main() -> None:
-    redis = await get_redis_storage()
-
-    if redis is None:
-        storage = MemoryStorage()
-        logging.info(msg='Redis connection is none - using MemoryStorage')
-    else:
-        storage = RedisStorage(
-            redis=redis,
-            state_ttl=settings.MEMSTORAGE_DATA_TTL,
-            data_ttl=settings.MEMSTORAGE_STATE_TTL,
-        )
+    storage = await get_redis_or_mem_storage()
 
     dp = Dispatcher(storage=storage)
 

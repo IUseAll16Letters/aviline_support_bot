@@ -20,8 +20,8 @@ GET_NAME_PATTERN = r'([a-zа-яA-ZА-Я]+[-\s.]*)*[a-zа-яA-ZА-Я]{2,}$'
 
 MIME_TYPES_ALLOWED = {'image/jpeg', 'image/png', 'video/mp4', 'audio/mpeg', 'audio/ogg'}
 
-CLEAN_PHONE_PATTERN = r'[^\d]'
-GET_PHONE_PATTERN = r'\d{7,11}'
+CLEAN_PHONE_PATTERN = r'[^\d]'  # not digits
+GET_PHONE_PATTERN = r'\d{7,11}'  # 7 to 11 digits
 GET_EMAIL_PATTERN = r'(\w+\.)*\w+@([a-zA-Z]+\.)+[a-zA-Z]{2,}'
 
 CONFIRMATION_MESSAGE = '✅ да'
