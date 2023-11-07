@@ -1,12 +1,11 @@
+import asyncio
 import logging
 import sys
 
-from aiogram.fsm.storage.redis import RedisStorage
 from aiohttp import web
 
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
 from tgbot.cache.connection import get_redis_storage, get_redis_or_mem_storage
@@ -21,7 +20,7 @@ from config import settings
 logging.basicConfig(level=logging.INFO)
 
 
-def main() -> None:
+async def main() -> None:
     storage = await get_redis_or_mem_storage()
 
     dp = Dispatcher(storage=storage)
@@ -61,4 +60,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    main()
+    asyncio.run(main())
