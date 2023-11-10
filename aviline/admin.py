@@ -5,7 +5,7 @@ from .models import Product, ProductProblem, Ticket, TicketMedia, TicketMessage
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ["pk", "name", "description", 'created_at', 'is_active', 'is_subproduct_of']
+    list_display = ["pk", "name", "description", 'created_at', 'is_active', 'attachment', 'is_subproduct_of']
     list_display_links = ["pk", "name"]
     readonly_fields = ["created_at", "updated_at"]
 
