@@ -16,7 +16,7 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def handle_start(message: Message, db_session: AsyncSession, state: FSMContext) -> None:
+async def handle_start(message: Message, state: FSMContext) -> None:
     """/start command handler, clear state, no db_access"""
     await state.clear()
     keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True, row_col=(2, 1))

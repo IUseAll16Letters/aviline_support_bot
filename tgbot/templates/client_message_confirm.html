@@ -3,5 +3,6 @@
 Ваше имя: <b>{{ username }}</b>
 Ваши контактные данные: <b>{{ user_contact }}</b>
 Ваше сообщение: <b>{% if not user_message %}<i>--Текст сообщения не может быть пустым--</i>{% else %}{{ user_message }}{% endif %}</b>
-Есть медиа файлы: {% if user_media %} <b>Да</b> {% else %}Нет{% endif %}
+Есть медиа файлы: {% if user_media %} <b>✔️</b> {% else %}--{% endif %}
+{% if err %}Ошибки: {{ err }}{% endif %}
 {% if user_message %}Всё верно? {% endif %}

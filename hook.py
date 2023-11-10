@@ -8,7 +8,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 
-from tgbot.cache.connection import get_redis_storage, get_redis_or_mem_storage
+from tgbot.cache.connection import get_redis_or_mem_storage
 from tgbot.database import get_connection_pool
 from tgbot.middleware import DbSessionMiddleware
 from tgbot.utils import webhook_on_startup, webhook_on_shutdown
@@ -20,8 +20,8 @@ from config import settings
 logging.basicConfig(level=logging.INFO)
 
 
-async def main() -> None:
-    storage = await get_redis_or_mem_storage()
+async def main(lp) -> None:
+    storage = await lp.run_until_complete(get_redis_or_mem_storage)
 
     dp = Dispatcher(storage=storage)
 
@@ -60,4 +60,6 @@ async def main() -> None:
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    asyncio.run(main())
+    loop = asyncio.new_event_loop()
+    print(loop)
+    asyncio.run(main(loop))

@@ -18,7 +18,6 @@ async def select_product(callback_query: CallbackQuery, state: FSMContext, db_se
     data = await refresh_message_data_from_callback_query(callback_query, state, branch="support")
     text = render_template('products_list.html', data)
     available_products = await ProductRelatedQueries(db_session).get_all_products()
-    await state.set_state(TechSupportState.select_product)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -26,6 +25,7 @@ async def select_product(callback_query: CallbackQuery, state: FSMContext, db_se
         keyboard=get_inline_keyboard_builder(available_products, row_col=(1, 1)),
         bot=bot,
     )
+    await state.set_state(TechSupportState.select_product)
 
 
 @router.callback_query(F.data != 'back', TechSupportState.select_product)
@@ -38,8 +38,8 @@ async def product_problems(callback_query: CallbackQuery, state: FSMContext, db_
     keyboard = get_inline_keyboard_builder(
         [str(i) for i in range(1, len(data['problems']) + 1)],
         support_reachable=True,
+        row_col=(2, 2),
     )
-    await state.set_state(TechSupportState.product_problems)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -47,6 +47,7 @@ async def product_problems(callback_query: CallbackQuery, state: FSMContext, db_
         keyboard=keyboard,
         bot=bot,
     )
+    await state.set_state(TechSupportState.product_problems)
 
 
 @router.callback_query(F.data.regexp(r'\d+'), TechSupportState.product_problems)
@@ -72,7 +73,6 @@ async def problem_solution(callback_query: CallbackQuery, state: FSMContext, db_
         return
 
     text = render_template('product_problem_solution.html', values=data)
-    await state.set_state(TechSupportState.problem_details)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -80,3 +80,4 @@ async def problem_solution(callback_query: CallbackQuery, state: FSMContext, db_
         keyboard=get_inline_keyboard_builder(support_reachable=True),
         bot=bot,
     )
+    await state.set_state(TechSupportState.problem_details)

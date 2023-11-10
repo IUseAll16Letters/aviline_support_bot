@@ -28,10 +28,8 @@ async def recursive_scout_products(callback_query: CallbackQuery, state: FSMCont
     data = await refresh_message_data_from_callback_query(callback_query, state, product=callback_query.data)
 
     try:
-        sub_products = await ProductRelatedQueries(db_session).count_sub_products(data["product"])
+        sub_products = await ProductRelatedQueries(db_session).get_sub_products(data["product"])
         if sub_products:
-            sub_products = await ProductRelatedQueries(db_session).get_sub_products(data["product"])
-            await state.set_state(PurchaseState.select_sub_product)
             text = render_template('sub_products_list.html', values=data)
             await edit_base_message(
                 chat_id=data['chat_id'],
@@ -40,9 +38,8 @@ async def recursive_scout_products(callback_query: CallbackQuery, state: FSMCont
                 keyboard=get_inline_keyboard_builder(sub_products, row_col=(1, 1)),
                 bot=bot,
             )
+            await state.set_state(PurchaseState.select_sub_product)
         else:
-            print('no sub products')
-            await state.set_state(PurchaseState.product_description)
             product_details = await ProductRelatedQueries(db_session).get_product_detail(product)
             data['title'], data['details'], data['attachment'] = product_details[0].title, product_details[
                 0].description, product_details[0].attachment
@@ -54,6 +51,7 @@ async def recursive_scout_products(callback_query: CallbackQuery, state: FSMCont
                 keyboard=get_inline_keyboard_builder(support_reachable=True),  # TODO get database check
                 bot=bot,
             )
+            await state.set_state(PurchaseState.product_description)
     except Exception as e:
         msg = f"purchase_select_options | state: select_product | could not fetch product details for " \
               f"{product} product | error: {e}"

@@ -25,6 +25,7 @@ GET_PHONE_PATTERN = r'\d{7,11}'  # 7 to 11 digits
 GET_EMAIL_PATTERN = r'(\w+\.)*\w+@([a-zA-Z]+\.)+[a-zA-Z]{2,}'
 
 CONFIRMATION_MESSAGE = '✅ да'
+NEGATIVE_MESSAGE = '❌ Нет. У меня остались вопросы'
 
 MEDIA_TYPES = {
     "img": 1,

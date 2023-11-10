@@ -1,15 +1,15 @@
 __all__ = (
     "Product",
     "ProductProblem",
-    "ProductDetail",
     "Ticket",
     "TicketMessage",
     "TicketMedia",
+    # "ProductDetail",
 )
 
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.fields import GenericForeignKey
+
+from .validators import product_name_lte_64_bytes
 
 
 class CreateUpdateProxy(models.Model):
@@ -29,13 +29,22 @@ class MediaTypeChoices(models.IntegerChoices):
 
 
 class Product(CreateUpdateProxy):
-    name = models.CharField(max_length=150, unique=True, null=False)
+    name = models.CharField(
+        max_length=64, unique=True, null=False, validators=[product_name_lte_64_bytes],
+        help_text='Имя продукта, не более 64 байт (примерно 32 символа кириллицы)'
+    )
     description = models.TextField(null=True, blank=True)
     is_active = models.BooleanField(default=True, null=False, blank=False)
+    attachment = models.URLField(verbose_name="attachment link", null=True, blank=True)
 
     is_subproduct_of = models.ForeignKey(
         'Product', on_delete=models.SET_NULL, null=True, blank=True, related_name='subproduct'
     )
+
+    class Meta:
+        verbose_name = 'Продукт'
+        verbose_name_plural = 'Продукты'
+        ordering = ['id', ]
 
     def __str__(self):
         return f'{self.pk}. {self.name}'
@@ -60,8 +69,13 @@ class ProductProblem(CreateUpdateProxy):
 
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name = 'Вопрос'
+        verbose_name_plural = 'Вопросы'
+        ordering = ['id']
+
     def __str__(self):
-        return f'{self.product.name} {self.title}'
+        return f'{self.pk}. {self.product.name} {self.title}'
 
 
 class Ticket(CreateUpdateProxy):
@@ -70,8 +84,13 @@ class Ticket(CreateUpdateProxy):
 
     is_solved = models.BooleanField(default=False)
 
+    class Meta:
+        verbose_name = 'Обращение'
+        verbose_name_plural = 'Обращения'
+        ordering = ['id']
+
     def __str__(self):
-        return f"{self.id}. {self.question[:30]}..."
+        return f"{self.pk}. {self.question[:30]}..."
 
 
 class TicketMedia(CreateUpdateProxy):
@@ -83,17 +102,23 @@ class TicketMedia(CreateUpdateProxy):
 
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, editable=False)
 
+    def __str__(self):
+        return f"{self.pk}. {self.telegram_id[:10]}"
+
 
 class TicketMessage(CreateUpdateProxy):
     message_id = models.PositiveBigIntegerField(null=False, blank=False)
 
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, editable=False)
 
+    def __str__(self):
+        return f"{self.pk}. {self.ticket}"
 
-class Visitor(CreateUpdateProxy):
-    user_id = models.IntegerField(null=False, blank=False)
-    username = models.CharField(max_length=255, null=True, blank=True)
-    firstname = models.CharField(max_length=255, null=True, blank=True)
-    lastname = models.CharField(max_length=255, null=True, blank=True)
+#
+# class Visitor(CreateUpdateProxy):
+#     user_id = models.IntegerField(null=False, blank=False)
+#     username = models.CharField(max_length=255, null=True, blank=True)
+#     firstname = models.CharField(max_length=255, null=True, blank=True)
+#     lastname = models.CharField(max_length=255, null=True, blank=True)
 
 

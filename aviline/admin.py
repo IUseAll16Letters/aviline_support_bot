@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Product, ProductProblem, Ticket, TicketMedia, TicketMessage, ProductDetail
+from .models import Product, ProductProblem, Ticket, TicketMedia, TicketMessage
 
 
 @admin.register(Product)
@@ -13,11 +13,6 @@ class ProductAdmin(admin.ModelAdmin):
     ordering = ['pk']
 
     list_select_related = ["is_subproduct_of"]
-
-
-@admin.register(ProductDetail)
-class ProductDetailAdmin(admin.ModelAdmin):
-    list_display = ["id", "title", "description", "attachment", "product"]
 
 
 @admin.register(ProductProblem)

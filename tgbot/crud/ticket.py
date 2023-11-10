@@ -56,7 +56,7 @@ class TicketRelatedQueries:
         res = await self.db_session.execute(stmt)
         return res
 
-    async def get_customer_id_from_message(self, message_id: int):
+    async def get_ticket_data_from_message(self, message_id: int):
         """When REPLY in any of AVILINE chat - get client to reply based on message id"""
         stmt = select(Ticket.customer, Ticket.id, Ticket.question)\
             .join_from(Ticket, TicketMessage)\

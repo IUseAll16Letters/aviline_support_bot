@@ -23,7 +23,6 @@ async def purchase_selected(
     available_products = await ProductRelatedQueries(db_session).get_all_products()
     text = render_template('products_list.html', data)
 
-    await state.set_state(PurchaseState.select_product)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -31,6 +30,7 @@ async def purchase_selected(
         keyboard=get_inline_keyboard_builder(available_products, row_col=(1, 1)),
         bot=bot,
     )
+    await state.set_state(PurchaseState.select_product)
 
 
 # *start* TODO Fix this piece
