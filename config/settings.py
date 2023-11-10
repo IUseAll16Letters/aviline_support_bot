@@ -190,3 +190,6 @@ MAX_WARRANTY_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # Max file size allowed for wa
 #         }
 #     }
 # }
+
+LOG_FILE_NAME = 'telegram_bot.log'
+LOG_FILE_LOCATION = Path('/var') / 'log' / 'tgbot' / LOG_FILE_NAME

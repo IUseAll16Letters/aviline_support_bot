@@ -35,9 +35,6 @@ MEDIA_TYPES = {
     "animation": 5,
 }
 
-LOG_FILE_NAME = 'telegram_bot.log'
-LOG_FILE_LOCATION = PROJECT_LEVEL_DIR / 'var' / 'log' / 'tgbot' / LOG_FILE_NAME
-
 WARRANTY_CHANGE_CARD = {"🔁 Изменить вложение": "change_warranty_card"}
 WARRANTY_CHANGE_CONTACTS = {"🔁 Изменить контактные данные": "change_client_contact"}
 WARRANTY_CONFIRM_MAIL = {"✅ Отправить сообщение": CONFIRMATION_MESSAGE}

@@ -5,8 +5,7 @@ import logging.handlers as handlers
 from aiogram.loggers import event, dispatcher, middlewares
 
 
-from tgbot.constants import LOG_FILE_LOCATION
-from config.settings import DEBUG
+from config.settings import DEBUG, LOG_FILE_LOCATION
 
 
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.WARNING)

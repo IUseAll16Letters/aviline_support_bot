@@ -1,4 +1,4 @@
-__all__ = ("ProductDetail", )
+# __all__ = ("ProductDetail", )
 
 
 from sqlalchemy import String, Text, ForeignKey, URL

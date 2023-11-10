@@ -27,6 +27,7 @@ class Product(Base, TimeStampMixin):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(150), nullable=False, unique=True)
     description: Mapped[str] = mapped_column(Text(), nullable=True)
+    attachment: Mapped[str] = mapped_column(String(200), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean(), default=True, nullable=False)
     is_subproduct_of_id = mapped_column(ForeignKey('aviline_product.id'))
 
@@ -38,9 +39,9 @@ class Product(Base, TimeStampMixin):
     problems: Mapped[List["ProductProblem"]] = relationship(
         back_populates="product", cascade="all, delete-orphan",
     )
-    details: Mapped[List["ProductDetail"]] = relationship(
-        back_populates="product", cascade="all, delete-orphan",
-    )
+    # details: Mapped[List["ProductDetail"]] = relationship(
+    #     back_populates="product", cascade="all, delete-orphan",
+    # )
 
     def __repr__(self):
         return f'Product(id={self.id!r}, name={self.name!r})'
