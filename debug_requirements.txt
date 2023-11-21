@@ -1,7 +1,14 @@
 python-dotenv
-aiogram== 3.0.0b7
+aiohttp==3.8.5
+aiogram==3.0.0b7
 jinja2
 django==4.2.0
-django-extensions
-aiosqlite
 sqlalchemy
+aiosmtplib
+aiofiles
+redis[hiredis]
+aioredis
+flake8
+flake8-bugbear
+flake8-commas
+psycopg2

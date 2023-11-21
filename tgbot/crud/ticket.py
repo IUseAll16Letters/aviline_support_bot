@@ -50,7 +50,6 @@ class TicketRelatedQueries:
                 "ticket_id": ticket_id,
             } for message in messages
         ]
-
         stmt = insert(TicketMessage).values(messages).returning(TicketMessage.id)
         res = await self.db_session.execute(stmt)
         return res

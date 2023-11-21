@@ -1,6 +1,6 @@
 __all__ = ("ProductRelatedQueries",)
 
-from sqlalchemy import select, Sequence, func, column
+from sqlalchemy import select, Sequence, func, column, Integer, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
@@ -35,7 +35,7 @@ class ProductRelatedQueries:
             .join(Product.subproduct.of_type(prod_alias)) \
             .filter(
                 Product.name == prod_name,
-                prod_alias.is_active == 1,
+                cast(prod_alias.is_active, Integer) == 1,
                 prod_alias.is_subproduct_of_id == Product.id,
         )
         res = await self.db_session.execute(stmt)
@@ -49,7 +49,7 @@ class ProductRelatedQueries:
             .join(Product.subproduct.of_type(prod_alias)) \
             .filter(
                 Product.name == prod_name,
-                prod_alias.is_active == 1,
+                cast(prod_alias.is_active, Integer) == 1,
                 prod_alias.is_subproduct_of_id == Product.id,
         )
         res = await self.db_session.execute(stmt)

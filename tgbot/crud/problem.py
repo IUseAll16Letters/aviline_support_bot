@@ -2,7 +2,7 @@ __all__ = ("get_product_problems", "get_problem_solution")
 
 from typing import Any
 
-from sqlalchemy import select, Sequence, Row
+from sqlalchemy import select, Sequence, Row, cast, Integer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.models import Product, ProductProblem
@@ -16,7 +16,7 @@ async def get_product_problems(db_session: AsyncSession, product: str) -> Sequen
     """
     stmt = select(ProductProblem.title).join_from(ProductProblem, Product).filter(
         Product.name == product,
-        Product.is_active == 1,
+        cast(Product.is_active, Integer) == 1,
     )
     result = await db_session.execute(stmt)
 
@@ -34,7 +34,7 @@ async def get_problem_solution(db_session: AsyncSession, product: str, problem_o
         .join_from(ProductProblem, Product)\
         .filter(
         Product.name == product,
-        Product.is_active == 1,
+        cast(Product.is_active, Integer) == 1,
     )
     result = await db_session.execute(stmt)
 

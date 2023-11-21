@@ -11,3 +11,5 @@ aioredis
 flake8
 flake8-bugbear
 flake8-commas
+psycopg2-binary
+asyncpg

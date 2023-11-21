@@ -28,7 +28,9 @@ async def webhook_on_startup(bot: Bot) -> None:
 
 
 async def polling_on_startup(bot: Bot) -> None:
-    utils_logger.debug(msg=f'Starting Bot(id={bot.id}) in POLLING mode')
+    msg = f'Starting Bot(id={bot.id}) in POLLING mode...'
+    print(msg)
+    utils_logger.debug(msg=msg)
 
 
 async def webhook_on_shutdown(bot: Bot) -> None:
@@ -38,6 +40,7 @@ async def webhook_on_shutdown(bot: Bot) -> None:
         utils_logger.debug(msg=f'Webhook bot {bot.id} was successfully stopped: {webhook_was_stopped}')
     except Exception as e:
         utils_logger.warning(msg=f"Could not stop WEBHOOK for {bot.id}. {e}")
+    print(bot.id, 'is stopped...')
 
 
 async def polling_on_shutdown(bot: Bot) -> None:

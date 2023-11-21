@@ -188,3 +188,4 @@ storage
 
 *.sqlite3
 var/log/tgbot/*.log
+/static/*
