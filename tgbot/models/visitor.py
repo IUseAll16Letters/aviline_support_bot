@@ -1,7 +1,7 @@
 __all__ = ("Visitor", )
 
-from sqlalchemy import String, Text, ForeignKey, URL, Integer, BigInteger
-from sqlalchemy.orm import relationship, mapped_column, Mapped
+from sqlalchemy import String, BigInteger
+from sqlalchemy.orm import mapped_column, Mapped
 
 from .base import Base, TimeStampMixin
 

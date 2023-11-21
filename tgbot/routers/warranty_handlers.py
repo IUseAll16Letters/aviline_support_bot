@@ -72,7 +72,7 @@ async def enter_car_brand(message: Message, state: FSMContext, bot: Bot):
     await state.set_state(WarrantyState.car_brand)
     data = await state.update_data({"client_city": message.text})  # if not message text: raise error
     text = render_template('warranty_client_car.html')
-    
+
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -89,12 +89,12 @@ async def confirm_warranty_entry(message: Message, state: FSMContext, bot: Bot):
     await state.set_state(WarrantyState.confirm_entry)
     data = await state.update_data({"client_car": message.text})
     text = render_template("warranty_confirm_entry.html", values=data)
-    
+
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
         text=text,
-        keyboard=get_inline_keyboard_builder([CONFIRMATION_MESSAGE, ]),
+        keyboard=get_inline_keyboard_builder([CONFIRMATION_MESSAGE]),
         bot=bot,
     )
     await message.delete()
@@ -159,20 +159,15 @@ async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
             data['err'] = "!Размер Вашего файла превышает 10 МБ. " \
                           "Вы можете уменьшить качество или обрезать несущественную информацию с изображения."
         elif file_id != -2:
-            user_warranty_card = await download_file_from_telegram_file_id(
-                bot_instance=bot,
-                telegram_file_id=file_id,
-            )
-            saved = await RedisAdapter.save_client_warranty_image(
-                user_id=message.from_user.id, file=user_warranty_card
-            )
+            user_warranty_card = await download_file_from_telegram_file_id(bot_instance=bot, telegram_file_id=file_id)
+            await RedisAdapter.save_client_warranty_image(user_id=message.from_user.id, file=user_warranty_card)
             data['user_warranty_card'] = ext
             keyboard_buttons.update(WARRANTY_CHANGE_CARD)
     else:
         keyboard_buttons.update(WARRANTY_CHANGE_CARD)
 
     data = await state.update_data(data)
-    
+
     if data.get('user_warranty_card', False) and data.get('user_warranty_message') is not None:
         keyboard_buttons.update(WARRANTY_CONFIRM_MAIL)
 
@@ -214,7 +209,7 @@ async def clear_field(callback_query: CallbackQuery, state: FSMContext, bot: Bot
 
     data = await state.update_data(data)
     text = render_template("warranty_enter_approval_docs.html", values=data)
-    
+
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -264,8 +259,8 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
         await state.clear()
 
     else:
-        data['err'] = f'Изображение гарантийного талона было удалено, либо произошел системный сбой.' \
-                      f'\nПожалуйста перезагрузите изображение.'
+        data['err'] = 'Изображение гарантийного талона было удалено, либо произошел системный сбой.' \
+                      '\nПожалуйста перезагрузите изображение.'
         data['user_warranty_card'] = False
         keyboard_buttons = {}
 
@@ -277,5 +272,5 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
             message_id=data['message_id'],
             text=render_template('warranty_enter_approval_docs.html', values=data),
             keyboard=get_inline_keyboard_builder(iterable=keyboard_buttons),
-            bot=bot
+            bot=bot,
         )

@@ -63,7 +63,7 @@ class Product(CreateUpdateProxy):
     class Meta:
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукты'
-        ordering = ['id', ]
+        ordering = ['id']
 
     def __str__(self):
         return f'{self.pk}. {self.name}'
@@ -112,7 +112,7 @@ class Ticket(CreateUpdateProxy):
     customer = models.PositiveIntegerField(editable=False)
     question = models.TextField(
         blank=False,
-        null=False
+        null=False,
     )
 
     is_solved = models.BooleanField(default=False)
@@ -131,7 +131,7 @@ class TicketMedia(CreateUpdateProxy):
         max_length=150,
         null=False,
         blank=False,
-        editable=False
+        editable=False,
     )
     media_type = models.SmallIntegerField(
         choices=MediaTypeChoices.choices,
@@ -141,7 +141,7 @@ class TicketMedia(CreateUpdateProxy):
     ticket = models.ForeignKey(
         Ticket,
         on_delete=models.CASCADE,
-        editable=False
+        editable=False,
     )
 
     def __str__(self):
@@ -151,13 +151,13 @@ class TicketMedia(CreateUpdateProxy):
 class TicketMessage(CreateUpdateProxy):
     message_id = models.PositiveBigIntegerField(
         null=False,
-        blank=False
+        blank=False,
     )
 
     ticket = models.ForeignKey(
         Ticket,
         on_delete=models.CASCADE,
-        editable=False
+        editable=False,
     )
 
     def __str__(self):

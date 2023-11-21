@@ -29,7 +29,9 @@ async def select_product(callback_query: CallbackQuery, state: FSMContext, db_se
 
 
 @router.callback_query(F.data != 'back', TechSupportState.select_product)
-async def product_problems(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
+async def product_problems(
+        callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot,
+) -> None:
     data = await refresh_message_data_from_callback_query(callback_query, state, product=callback_query.data)
 
     problems = await get_product_problems(db_session, callback_query.data)
@@ -51,7 +53,9 @@ async def product_problems(callback_query: CallbackQuery, state: FSMContext, db_
 
 
 @router.callback_query(F.data.regexp(r'\d+'), TechSupportState.product_problems)
-async def problem_solution(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
+async def problem_solution(
+        callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot,
+) -> None:
     data = await refresh_message_data_from_callback_query(callback_query, state)
 
     try:
@@ -63,7 +67,7 @@ async def problem_solution(callback_query: CallbackQuery, state: FSMContext, db_
     except KeyError as e:
         msg = f'Key not found in Storage items. {e}'
         database.error(msg=msg)
-        await callback_query.answer(f"Ошибка исполнения запроса к стороннему сервису. Пожалуйста подождите")
+        await callback_query.answer("Ошибка исполнения запроса к стороннему сервису. Пожалуйста подождите")
         return
 
     except IndexError as e:

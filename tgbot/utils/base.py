@@ -7,7 +7,7 @@ from typing import Optional, List, Union, Tuple
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import Message, InputMediaVideo, InputMediaPhoto, InputMediaDocument, InputMediaAudio, CallbackQuery
+from aiogram.types import Message, InputMediaVideo, InputMediaPhoto
 from aiogram.utils.keyboard import KeyboardBuilder
 
 from tgbot.constants import MIME_TYPES_ALLOWED, MEDIA_TYPES
@@ -58,7 +58,9 @@ async def edit_base_message(chat_id: int, message_id: int, text: str, keyboard: 
             reply_markup=keyboard,
         )
     except TelegramBadRequest:
-        msg = f''
+        # TODO what is it?!
+        # msg = f''
+        ...
 
 
 def get_client_message(message: Message) -> Optional[str]:

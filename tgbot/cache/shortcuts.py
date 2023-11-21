@@ -1,4 +1,4 @@
-from typing import Any, Tuple, Union, BinaryIO
+from typing import Tuple, Union
 from redis.asyncio.client import Redis
 from datetime import timedelta
 

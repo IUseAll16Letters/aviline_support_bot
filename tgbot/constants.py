@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from aiogram.types import InputMediaPhoto, InputMediaVideo, InputMediaDocument, InputMediaAudio, InputMediaAnimation
-
 
 TG_BOT_DIR = Path(__file__).resolve().parent
 PROJECT_LEVEL_DIR = TG_BOT_DIR.parent

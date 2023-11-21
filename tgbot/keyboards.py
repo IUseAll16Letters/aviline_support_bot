@@ -1,4 +1,4 @@
-from typing import Tuple, Optional, Iterable, Sequence, Union
+from typing import Tuple, Iterable, Sequence, Union
 
 from aiogram.utils.keyboard import KeyboardBuilder
 from aiogram.types import InlineKeyboardButton

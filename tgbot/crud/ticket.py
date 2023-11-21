@@ -1,15 +1,14 @@
 __all__ = ("TicketRelatedQueries", )
 
-from typing import Union, List, Optional
+from typing import List, Optional
 from datetime import datetime
 
-from aiogram.types import InputMediaPhoto, InputMediaVideo, Message, InputMediaDocument, InputMediaAudio
+from aiogram.types import Message
 from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.models import Ticket, TicketMedia, TicketMessage
 from tgbot.utils import get_media_type
-from tgbot.types import Media
 
 
 class TicketRelatedQueries:

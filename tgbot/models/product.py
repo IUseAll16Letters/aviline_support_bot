@@ -2,7 +2,7 @@ __all__ = ("Product", )
 
 from typing import List
 
-from sqlalchemy import String, Text, Boolean, Integer, ForeignKey
+from sqlalchemy import String, Text, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimeStampMixin
@@ -32,7 +32,7 @@ class Product(Base, TimeStampMixin):
     is_subproduct_of_id = mapped_column(ForeignKey('aviline_product.id'))
 
     subproducts: Mapped[List["Product"]] = relationship(
-        back_populates="subproduct"
+        back_populates="subproduct",
     )
     subproduct: Mapped["Product"] = relationship()
 

@@ -1,0 +1,35 @@
+[flake8]
+exclude =
+    .git,
+    __pycache__/,
+    .env,dump/,
+    *.sqlite3,
+    idea/,
+    3_11/,
+    tgbot/tests/,
+    aviline/migrations/,
+    aviline/tests.py,
+    aviline/views.py,
+    aviline/validators.py,
+    manage.py,
+
+max_line_length = 120
+
+# 4 is default
+indent_size = 4
+# Toggle whether pycodestyle should enforce matching the indentation of the opening bracket’s line.
+# hang_closing = True, indentation at the new line
+
+ignore = E121,E123,E126,E226,E24,E704,W503,W504
+# ignore e722 empty exception
+
+# test ignore per file (501 = Line too long)
+per_file_ignores =
+    config/settings:E501,
+    __init__.py:F405,F403,
+    tgbot/navigation.py:F841,
+    tgbot/models/*:F821
+
+statistics = True
+
+# jobs = n, where n is subprocesses amount

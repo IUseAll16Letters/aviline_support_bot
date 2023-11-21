@@ -8,3 +8,6 @@ aiosmtplib
 aiofiles
 redis[hiredis]
 aioredis
+flake8
+flake8-bugbear
+flake8-commas

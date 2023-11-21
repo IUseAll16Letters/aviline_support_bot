@@ -83,7 +83,7 @@ if DEBUG:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
-        }
+        },
     }
 # TODO Implement postgre db config
 else:
@@ -91,7 +91,7 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
-        }
+        },
     }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -150,7 +150,7 @@ CACHE = {
         "DBS": {
             'memstorage': 0,
             'cache': 1,
-        }
+        },
     },
     0: {
         "HOST": os.getenv('REDIS_HOST'),
@@ -158,8 +158,8 @@ CACHE = {
         "DBS": {
             'memstorage': 0,
             'cache': 1,
-        }
-    }
+        },
+    },
 }
 
 MEMSTORAGE_STATE_TTL = None
@@ -192,4 +192,5 @@ MAX_WARRANTY_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # Max file size allowed for wa
 # }
 
 LOG_FILE_NAME = 'telegram_bot.log'
-LOG_FILE_LOCATION = Path('/var') / 'log' / 'tgbot' / LOG_FILE_NAME
+# LOG_FILE_LOCATION = Path('/var') / 'log' / 'tgbot' / LOG_FILE_NAME
+LOG_FILE_LOCATION = BASE_DIR / 'var' / 'log' / 'tgbot' / LOG_FILE_NAME

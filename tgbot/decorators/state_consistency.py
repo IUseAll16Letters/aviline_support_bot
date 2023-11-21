@@ -34,7 +34,7 @@ def state_control(state: Union[State, None]):
                     await bot.answer_callback_query(
                         callback_query_id=query.id,
                         text=f'Возникла ошибка при исполнении команды: {query.data}.\n'
-                             f'Приносим извинения. Пожалуйста перезапустите бота через /start'
+                             'Приносим извинения. Пожалуйста перезапустите бота через /start',
                     )
                 if 'state' in kwargs:
                     state_object: FSMContext = kwargs['state']

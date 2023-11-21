@@ -1,13 +1,6 @@
-import asyncio
-import logging
-import sys
-
 import uvicorn
-from aiohttp import web
 
 from aiogram import Bot, Dispatcher
-from aiogram.enums import ParseMode
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiogram.types import Update
 from fastapi import FastAPI
 

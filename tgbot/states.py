@@ -11,13 +11,6 @@ class PurchaseState(BaseState):
     product_description = State()
 
 
-# class ProductDetails(PurchaseState):
-#     price = State()
-#     versions = State()
-#     details = State()
-#     manual = State()
-
-
 class TechSupportState(BaseState):
     select_product = State()
     product_problems = State()

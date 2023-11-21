@@ -21,7 +21,7 @@ def compose_user_mail_text(data: Dict[str, str]):
 # TODO change signature
 async def send_email_to_aviline(subject, text, warranty_card: bytes, warranty_basename: str, text_type: str = 'plain'):
     sender = EMAIL_HOST_USER
-    to = [SMTP_MAIL_PARAMS['send_to'], ]
+    to = [SMTP_MAIL_PARAMS['send_to']]
     msg = MIMEMultipart()
     msg.preamble = subject
     msg['subject'] = subject
@@ -48,4 +48,3 @@ async def send_email_to_aviline(subject, text, warranty_card: bytes, warranty_ba
         response = await connection.send_message(msg)
         msg = f"Mail sent with response: {response = }. "
         mailing.info(msg=msg)
-

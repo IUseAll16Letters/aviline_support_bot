@@ -37,7 +37,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
     try:
         current_state = await state.get_state()
         data = await state.get_data()
-        reverse_state = Navigation.find(current_state).reverse_state(par=data.get("branch"))  # get node, get node parent
+        reverse_state = Navigation.find(current_state).reverse_state(par=data.get("branch"))  # find node, then parent
 
         keyboard = get_inline_keyboard_builder()
         template = template_from_state[reverse_state]
@@ -60,7 +60,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
 
         elif template == 'warranty_confirm_entry.html':
             keyboard = get_inline_keyboard_builder(
-                iterable=[CONFIRMATION_MESSAGE, ],
+                iterable=[CONFIRMATION_MESSAGE],
                 row_col=(1, 1),
             )
 
@@ -77,5 +77,5 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
     except Exception as e:
         msg = f"Backward_reversing. Could not reverse, state: {await state.get_state()}. Error: {e}"
         navigation.error(msg=msg)
-        await callback_query.answer(f"Возникла ошибка реверса.\nПожалуйста, перезапустите бота через "
-                                    f"/start или свяжитесь с техподдержкой")
+        await callback_query.answer("Возникла ошибка возврата.\nПожалуйста, перезапустите бота через "
+                                    "/start или свяжитесь с техподдержкой")

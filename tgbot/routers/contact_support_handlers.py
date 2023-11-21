@@ -27,7 +27,7 @@ async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot
     if minutes not in (-2, -1):
         await callback_query.answer(
             text=f"Вы можете создавать обращения не чаще чем 1 раз в 5 минут.\n"
-                 f"След. обращение воможно через: {minutes} мин, {seconds} сек."
+                 f"След. обращение воможно через: {minutes} мин, {seconds} сек.",
         )
         return
 
@@ -44,7 +44,7 @@ async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot
 
 
 @router.message(F.text.regexp(GET_NAME_PATTERN), ContactSupportState.enter_name)
-async def user_enters_contact(message: Message, state: FSMContext, bot: Bot):
+async def user_enters_contact(message: Message, state: FSMContext, bot: Bot) -> None:
     """Client must enter valid contact (email/phone)
     state before: Contact -> enter_name
     state after: Contact -> enter_name -> enter_contact
@@ -63,7 +63,7 @@ async def user_enters_contact(message: Message, state: FSMContext, bot: Bot):
 
 
 @router.message(ContactSupportState.enter_name)
-async def user_sent_bad_name(message: Message, state: FSMContext, bot: Bot):
+async def user_sent_bad_name(message: Message, state: FSMContext, bot: Bot) -> None:
     """Client enter invalid name that has numbers or symbols
     FIGURE OUT IF IT IS NEEDED AT ALL"""
     data = await state.get_data()
@@ -84,7 +84,7 @@ async def user_sent_bad_name(message: Message, state: FSMContext, bot: Bot):
     F.text.func(lambda s: re.search(GET_PHONE_PATTERN, re.sub(CLEAN_PHONE_PATTERN, '', s)) is not None) |
     F.text.func(lambda s: re.search(GET_EMAIL_PATTERN, s.strip()) is not None),
 )
-async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot):
+async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot) -> None:
     """Client must enter valid contact (email/phone)
     state before: Contact -> enter_name -> enter_contact
     state after: Contact -> enter_name -> enter_contact -> enter_message
@@ -104,7 +104,7 @@ async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot)
 
 
 @router.message(ContactSupportState.enter_contact)
-async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bot):
+async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bot) -> None:
     data = await state.update_data({'user_contact': message.text})
     text = render_template('client_bad_contact.html', values=data)
     await edit_base_message(
@@ -118,7 +118,7 @@ async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bo
 
 
 @router.message(ContactSupportState.enter_message)
-async def user_sent_message_or_media(message: Message, state: FSMContext, bot: Bot):
+async def user_sent_message_or_media(message: Message, state: FSMContext, bot: Bot) -> None:
     """Confirmation of clients input data
         state before: Contact -> enter_name -> enter_contact -> enter_message
         state after: Contact -> enter_name -> enter_contact -> enter_message -> entry_confirmation
@@ -147,7 +147,7 @@ async def user_sent_message_or_media(message: Message, state: FSMContext, bot: B
         if data['user_message'] is None:
             kb = get_inline_keyboard_builder()
         else:
-            kb = get_inline_keyboard_builder(iterable=[CONFIRMATION_MESSAGE, ], )
+            kb = get_inline_keyboard_builder(iterable=[CONFIRMATION_MESSAGE])
 
         await edit_base_message(
             chat_id=data['chat_id'],
@@ -159,7 +159,8 @@ async def user_sent_message_or_media(message: Message, state: FSMContext, bot: B
     except Exception as e:
         msg = f"Error while adding a message and media. ERR: {e}"
         handlers_logger.error(msg=msg)
-        data['err'] = 'Возникла ошибка при отправке сообщения. Пожалуйста вернитесь на шаг назад и повторите отправку данных заново'
+        data['err'] = 'Возникла ошибка при отправке сообщения. ' \
+                      'Пожалуйста вернитесь на шаг назад и повторите отправку данных заново'
 
         text = render_template('client_message_confirm.html', values=data)
         kb = get_inline_keyboard_builder()
@@ -176,8 +177,8 @@ async def user_sent_message_or_media(message: Message, state: FSMContext, bot: B
 
 @router.callback_query(F.data == CONFIRMATION_MESSAGE, ContactSupportState.enter_message)
 async def user_confirmed_message(
-        callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot
-):
+        callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot,
+) -> None:
     """Client has finished entering message, message is sent - show notification message"""
     data = await state.get_data()
     data['user_telegram_id'] = callback_query.from_user.id
@@ -239,7 +240,7 @@ async def user_confirmed_message(
 
 
 @router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}, check_is_reply=True))
-async def reply_in_aviline_chat(message: Message, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
+async def reply_in_aviline_chat(message: Message, db_session: AsyncSession, bot: Bot) -> None:
     quoted_message = message.reply_to_message.message_id
     ticket: Ticket = await TicketRelatedQueries(db_session).get_ticket_data_from_message(message_id=quoted_message)
 
@@ -256,7 +257,7 @@ async def reply_in_aviline_chat(message: Message, state: FSMContext, db_session:
         response = await bot.send_message(
             chat_id=ticket.customer,
             text=text,
-            reply_markup=client_answer_keyboard.as_markup()
+            reply_markup=client_answer_keyboard.as_markup(),
         )
 
         if response:
@@ -273,12 +274,12 @@ async def other_trash_talk(message: Message) -> None:
 
 
 @router.callback_query(F.data.in_({CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE}))
-async def client_replied(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
+async def client_replied(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
     if callback_query.data == NEGATIVE_MESSAGE:
         phone = "8-800-555-09-20"
         text = f"Пожалуйста свяжитесь с нашей техподдержкой по телефону: {phone}"
     else:
-        text = f'Благодарим Вас за Ваше обращение!'
+        text = 'Благодарим Вас за Ваше обращение!'
 
     await edit_base_message(
         chat_id=callback_query.message.chat.id,

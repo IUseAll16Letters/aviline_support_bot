@@ -15,7 +15,7 @@ class ProductRelatedQueries:
     async def get_all_products(self) -> Sequence:
         """Get all current products (* that are marked as active and don't have parent*)"""
         stmt = select(Product.name).where(
-            column("is_subproduct_of_id").is_(None) & column("is_active").is_(True)
+            column("is_subproduct_of_id").is_(None) & column("is_active").is_(True),
         )
         res = await self.db_session.execute(stmt)
 
