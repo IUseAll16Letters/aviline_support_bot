@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tgbot.constants import AVAILABLE_SERVICES, CONFIRMATION_MESSAGE
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils.template_engine import render_template
-from tgbot.crud import ProductRelatedQueries, get_product_problems, create_visitor
+from tgbot.crud import ProductRelatedQueries, get_product_problems
 from tgbot.navigation import Navigation, template_from_state
 from tgbot.logging_config import navigation
 
@@ -16,8 +16,9 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def handle_start(message: Message, db_session: AsyncSession) -> None:
-    """/start command handler, no state, no db_access"""
+async def handle_start(message: Message, state: FSMContext) -> None:
+    """/start command handler, clear state, no db_access"""
+    await state.clear()
     keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True, row_col=(2, 1))
     text = render_template('start.html')
     await message.answer(
@@ -29,14 +30,14 @@ async def handle_start(message: Message, db_session: AsyncSession) -> None:
 @router.callback_query(F.data == 'back')
 async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession) -> None:
     """
-    Navigation reversing logic that hooks "back" callback_query based on states and templates related to current state.
-    Returns to base welcome message (/start) in case no state set.
+    Navigation reversing logic that hooks "back" callback_query based on states and state related template.
+    Returns to base welcome message (/start) in case no state found.
     Node tree implementation using dfs with states as Node value and next/prev as parent/child Nodes
     """
     try:
         current_state = await state.get_state()
         data = await state.get_data()
-        reverse_state = Navigation.find(current_state).reverse_state(par=data.get("branch"))  # get node, get node parent
+        reverse_state = Navigation.find(current_state).reverse_state(par=data.get("branch"))  # find node, then parent
 
         keyboard = get_inline_keyboard_builder()
         template = template_from_state[reverse_state]
@@ -59,7 +60,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
 
         elif template == 'warranty_confirm_entry.html':
             keyboard = get_inline_keyboard_builder(
-                iterable=[CONFIRMATION_MESSAGE, ],
+                iterable=[CONFIRMATION_MESSAGE],
                 row_col=(1, 1),
             )
 
@@ -76,5 +77,5 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
     except Exception as e:
         msg = f"Backward_reversing. Could not reverse, state: {await state.get_state()}. Error: {e}"
         navigation.error(msg=msg)
-        await callback_query.answer(f"Возникла ошибка реверса.\nПожалуйста, перезапустите бота через "
-                                    f"/start или свяжитесь с техподдержкой")
+        await callback_query.answer("Возникла ошибка возврата.\nПожалуйста, перезапустите бота через "
+                                    "/start или свяжитесь с техподдержкой")

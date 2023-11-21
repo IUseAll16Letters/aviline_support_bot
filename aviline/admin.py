@@ -1,11 +1,11 @@
 from django.contrib import admin
 
-from .models import Product, ProductProblem, Ticket, TicketMedia, TicketMessage, ProductDetail
+from .models import Product, ProductProblem, Ticket, TicketMedia, TicketMessage
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ["pk", "name", "description", 'created_at', 'is_active', 'is_subproduct_of']
+    list_display = ["pk", "name", "description", 'created_at', 'is_active', 'attachment', 'is_subproduct_of']
     list_display_links = ["pk", "name"]
     readonly_fields = ["created_at", "updated_at"]
 
@@ -13,11 +13,6 @@ class ProductAdmin(admin.ModelAdmin):
     ordering = ['pk']
 
     list_select_related = ["is_subproduct_of"]
-
-
-@admin.register(ProductDetail)
-class ProductDetailAdmin(admin.ModelAdmin):
-    list_display = ["id", "title", "description", "attachment", "product"]
 
 
 @admin.register(ProductProblem)
@@ -33,7 +28,8 @@ class ProductProblemAdmin(admin.ModelAdmin):
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ['id', 'customer', 'is_solved', 'created_at', 'updated_at']
+    list_display = ['id', 'question', 'customer', 'is_solved', 'created_at', 'updated_at']
+    list_display_links = ["id", 'question']
 
 
 @admin.register(TicketMedia)

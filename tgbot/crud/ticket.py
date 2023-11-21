@@ -1,15 +1,14 @@
 __all__ = ("TicketRelatedQueries", )
 
-from typing import Union, List, Optional
+from typing import List, Optional
 from datetime import datetime
 
-from aiogram.types import InputMediaPhoto, InputMediaVideo, Message, InputMediaDocument, InputMediaAudio
+from aiogram.types import Message
 from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.models import Ticket, TicketMedia, TicketMessage
 from tgbot.utils import get_media_type
-from tgbot.types import Media
 
 
 class TicketRelatedQueries:
@@ -20,23 +19,25 @@ class TicketRelatedQueries:
         """Create ticket after client confirmed. 1st in chain"""
         stmt = insert(Ticket)\
             .values(
-            question=question,
-            customer=user_telegram_id,
-            created_at=created_at or datetime.now())\
+                question=question,
+                customer=user_telegram_id,
+                created_at=created_at or datetime.now())\
             .returning(Ticket.id)
 
         res = await self.db_session.execute(stmt)
         return res.first()
 
-    async def create_user_media_attached(self, media: List[Media], ticket_id: int) -> None:
+    async def create_user_media_attached(self, media: List[str], ticket_id: int) -> None:
         """Attach media to ticket if it exists"""
-        medias = [
-            {
-                "telegram_id": media_file.media,
-                "media_type": get_media_type(media_file),
+        medias = []
+        for m in media:
+            prefix, file_id = m.split("%%")
+            medias.append({
+                'telegram_id': file_id,
+                'media_type': get_media_type(prefix),
                 "ticket_id": ticket_id,
-            } for media_file in media
-        ]
+            })
+
         stmt = insert(TicketMedia).values(medias).returning(TicketMedia.id)
         res = await self.db_session.execute(stmt)
         return res
@@ -49,12 +50,11 @@ class TicketRelatedQueries:
                 "ticket_id": ticket_id,
             } for message in messages
         ]
-
         stmt = insert(TicketMessage).values(messages).returning(TicketMessage.id)
         res = await self.db_session.execute(stmt)
         return res
 
-    async def get_customer_id_from_message(self, message_id: int):
+    async def get_ticket_data_from_message(self, message_id: int):
         """When REPLY in any of AVILINE chat - get client to reply based on message id"""
         stmt = select(Ticket.customer, Ticket.id, Ticket.question)\
             .join_from(Ticket, TicketMessage)\

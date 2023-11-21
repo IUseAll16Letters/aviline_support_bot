@@ -1,9 +1,11 @@
 from .setup_logger import *
 
 __all__ = (
-    "utils_logger",
-    "waster_queries",
-    "navigation",
-    "mailing",
-    "database",
+    'redis_logger',
+    'utils_logger',
+    'handlers_logger',
+    'waster_queries',
+    'navigation',
+    'mailing',
+    'database',
 )

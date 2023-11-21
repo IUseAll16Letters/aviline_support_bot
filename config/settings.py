@@ -29,7 +29,7 @@ BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL")
 WEBHOOK_PATH = os.getenv("WEBHOOK_PATH")
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 
-DEBUG = os.getenv("DEBUG")
+DEBUG = int(os.getenv("DEBUG"))
 
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS.extend(os.getenv("ALLOWED_HOSTS").split(','))
@@ -83,15 +83,18 @@ if DEBUG:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
-        }
+        },
     }
-# TODO Implement postgre db config
 else:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv("POSTGRES_DB"),
+            'USER': os.getenv("POSTGRES_USER"),
+            'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
+            'HOST': 'localhost',
+            'PORT': '5432',
+        },
     }
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -115,6 +118,11 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+#
+# STATICFILES_DIRS = [
+#     BASE_DIR / 'static',
+# ]
+STATIC_ROOT = BASE_DIR / 'static'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -126,7 +134,7 @@ EMAIL_PORT = os.getenv('EMAIL_PORT')
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_AVILINE_MAILBOX = os.getenv('EMAIL_AVILINE_MAILBOX')
-DEFAULT_SUBJECT = "Warranty from user - %u%, telegram_id(debug) - %tgi%"
+DEFAULT_SUBJECT = "Warranty from telegram user - %u%"
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
@@ -142,6 +150,31 @@ SMTP_MAIL_PARAMS = {
     'password': EMAIL_HOST_PASSWORD,
     'port': EMAIL_PORT,
 }
+
+CACHE = {
+    1: {
+        "HOST": "127.0.0.1",
+        "PORT": 6379,
+        "DBS": {
+            'memstorage': 0,
+            'cache': 1,
+        },
+    },
+    0: {
+        "HOST": os.getenv('REDIS_HOST'),
+        "PORT": int(os.getenv("REDIS_PORT")),
+        "DBS": {
+            'memstorage': 0,
+            'cache': 1,
+        },
+    },
+}
+
+MEMSTORAGE_STATE_TTL = None
+MEMSTORAGE_DATA_TTL = None
+CACHE_IMAGE_TTL = 15 * 60
+CACHE_SUPPORT_TTL = 5 * 60
+MAX_WARRANTY_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # Max file size allowed for warranty card in bytes
 
 #
 # LOGGING = {
@@ -165,3 +198,7 @@ SMTP_MAIL_PARAMS = {
 #         }
 #     }
 # }
+
+LOG_FILE_NAME = 'telegram_bot.log'
+# LOG_FILE_LOCATION = Path('/var') / 'log' / 'tgbot' / LOG_FILE_NAME
+LOG_FILE_LOCATION = BASE_DIR / 'var' / 'log' / 'tgbot' / LOG_FILE_NAME

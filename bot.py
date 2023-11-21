@@ -2,14 +2,13 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
 
 from tgbot.utils import polling_on_startup, polling_on_shutdown
 from tgbot.routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers, \
     warranty_handlers, debug_handlers
 from tgbot.middleware import DbSessionMiddleware
 from tgbot.database import get_connection_pool
-
+from tgbot.cache.connection import get_redis_or_mem_storage
 
 from config import settings
 
@@ -20,7 +19,8 @@ async def main() -> None:
     bot = Bot(token=settings.TG_BOT_TOKEN, parse_mode='html')
     await bot.delete_webhook(drop_pending_updates=True)
 
-    storage = MemoryStorage()
+    storage = await get_redis_or_mem_storage()
+
     dp = Dispatcher(storage=storage)
 
     dp.include_routers(

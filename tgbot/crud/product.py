@@ -1,10 +1,10 @@
 __all__ = ("ProductRelatedQueries",)
 
-from sqlalchemy import select, Sequence, func, column
+from sqlalchemy import select, Sequence, func, column, Integer, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from tgbot.models import Product, ProductDetail
+from tgbot.models import Product
 
 
 class ProductRelatedQueries:
@@ -15,19 +15,18 @@ class ProductRelatedQueries:
     async def get_all_products(self) -> Sequence:
         """Get all current products (* that are marked as active and don't have parent*)"""
         stmt = select(Product.name).where(
-            column("is_subproduct_of_id").is_(None) & column("is_active").is_(True)
+            column("is_subproduct_of_id").is_(None) & column("is_active").is_(True),
         )
-        result = await self.db_session.execute(stmt)
+        res = await self.db_session.execute(stmt)
 
-        return result.scalars().all()
+        return res.scalars().all()
 
     async def get_product_detail(self, product_name: str) -> Sequence:
         """Get details from selected product by prod name taken from query"""
-        stmt = select(Product.name, ProductDetail.title, ProductDetail.description, ProductDetail.attachment) \
-            .join_from(ProductDetail, Product, full=True) \
+        stmt = select(Product.description, Product.attachment) \
             .where(Product.name == product_name)
         res = await self.db_session.execute(stmt)
-        return res.fetchall()
+        return res.first()
 
     async def count_sub_products(self, prod_name: str) -> int:
         """Count amount of sub products for selected product by prod name taken from query"""
@@ -36,11 +35,11 @@ class ProductRelatedQueries:
             .join(Product.subproduct.of_type(prod_alias)) \
             .filter(
                 Product.name == prod_name,
-                prod_alias.is_active == 1,
+                cast(prod_alias.is_active, Integer) == 1,
                 prod_alias.is_subproduct_of_id == Product.id,
         )
-        result = await self.db_session.execute(stmt)
-        data = result.first()
+        res = await self.db_session.execute(stmt)
+        data = res.first()
         return data[0]
 
     async def get_sub_products(self, prod_name: str) -> Sequence:
@@ -50,8 +49,8 @@ class ProductRelatedQueries:
             .join(Product.subproduct.of_type(prod_alias)) \
             .filter(
                 Product.name == prod_name,
-                prod_alias.is_active == 1,
+                cast(prod_alias.is_active, Integer) == 1,
                 prod_alias.is_subproduct_of_id == Product.id,
         )
-        result = await self.db_session.execute(stmt)
-        return result.scalars().all()
+        res = await self.db_session.execute(stmt)
+        return res.scalars().all()

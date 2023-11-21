@@ -1,7 +1,7 @@
 __all__ = ("ProductProblem", )
 
 
-from sqlalchemy import String, Text, ForeignKey, URL
+from sqlalchemy import String, Text, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 
 from .base import Base, TimeStampMixin

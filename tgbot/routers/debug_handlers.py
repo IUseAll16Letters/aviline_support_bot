@@ -19,6 +19,7 @@ async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
     waster_queries.info(msg=logger_message)
     await callback.answer("Ошибка отсутствия состояния\nПожалуйста нажмите назад или презапустите бота через /start "
                           "или из меню внизу")
+    await state.clear()
 
 
 @router.message()

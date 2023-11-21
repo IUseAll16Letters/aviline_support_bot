@@ -21,7 +21,7 @@ async def create_visitor(
         user_id=user_id,
         firstname=firstname,
         lastname=lastname,
-        created_at=created_at or datetime.now()
+        created_at=created_at or datetime.now(),
     )
     res = await db_session.execute(stmt)
     print(res)
