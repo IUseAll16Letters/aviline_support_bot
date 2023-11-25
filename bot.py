@@ -38,10 +38,13 @@ async def main() -> None:
     dp.message.middleware(DbSessionMiddleware(get_connection_pool()))
     dp.callback_query.middleware(DbSessionMiddleware(get_connection_pool()))
 
-    try:
-        await dp.start_polling(bot)
-    finally:
-        await dp.storage.close()
+    while True:
+        try:
+            await dp.start_polling(bot)
+        except (KeyboardInterrupt, SystemExit):
+            break
+        finally:
+            await dp.storage.close()
 
 
 if __name__ == '__main__':

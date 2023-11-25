@@ -37,8 +37,12 @@ async def purchase_selected(
 
 
 @router.callback_query(or_f(PurchaseState.select_product, PurchaseState.select_sub_product))
-async def product(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
-    print(f'Ой вэй, что твориться: {callback_query.data = }')
+async def product_subproduct_selected(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        db_session: AsyncSession,
+        bot: Bot,
+) -> None:
     product = callback_query.data
 
     try:

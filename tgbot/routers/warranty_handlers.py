@@ -142,7 +142,6 @@ async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
     new_user_message = get_client_message(message)
     keyboard_buttons = {}
 
-    # TODO Если файл уже есть - не давать грузить новый
     if new_user_message is not None:
         if user_message is not None:
             data['user_warranty_message'] += f" {new_user_message}"
@@ -259,8 +258,8 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
         await state.clear()
 
     else:
-        data['err'] = 'Изображение гарантийного талона было удалено, либо произошел системный сбой.' \
-                      '\nПожалуйста перезагрузите изображение.'
+        data['err'] = 'Срок хранения изображения гарантийного талона прошел и оно было удалено,' \
+                      ' либо произошел системный сбой.\nПожалуйста повторно загрузите изображение.'
         data['user_warranty_card'] = False
         keyboard_buttons = {}
 

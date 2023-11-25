@@ -44,7 +44,7 @@ async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot
 
 
 @router.message(F.text.regexp(GET_NAME_PATTERN), ContactSupportState.enter_name)
-async def user_enters_contact(message: Message, state: FSMContext, bot: Bot) -> None:
+async def user_sent_valid_name(message: Message, state: FSMContext, bot: Bot) -> None:
     """Client must enter valid contact (email/phone)
     state before: Contact -> enter_name
     state after: Contact -> enter_name -> enter_contact
@@ -89,8 +89,7 @@ async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot)
     state before: Contact -> enter_name -> enter_contact
     state after: Contact -> enter_name -> enter_contact -> enter_message
     """
-    await state.update_data({'user_contact': message.text})
-    data = await state.get_data()
+    data = await state.update_data({'user_contact': message.text})
     text = render_template('client_enter_message.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -105,7 +104,8 @@ async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot)
 
 @router.message(ContactSupportState.enter_contact)
 async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bot) -> None:
-    data = await state.update_data({'user_contact': message.text})
+    """User send the contact that doesn't pass filter from user_sent_valid_contact func."""
+    data = await state.get_data()
     text = render_template('client_bad_contact.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -218,8 +218,8 @@ async def user_confirmed_message(
             media=media,
             ticket_id=ticket.id,
         )
-
-    ticket_related_messages.append(await bot.send_message(chat_id=aviline_chat_id, text=user_message))
+    client_message_full_render = render_template('support_client_message_with_contacts.html', values=data)
+    ticket_related_messages.append(await bot.send_message(chat_id=aviline_chat_id, text=client_message_full_render))
 
     await TicketRelatedQueries(db_session).create_ticket_message(
         messages=ticket_related_messages,
