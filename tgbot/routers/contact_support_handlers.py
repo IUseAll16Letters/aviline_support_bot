@@ -241,6 +241,7 @@ async def user_confirmed_message(
 
 @router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}, check_is_reply=True))
 async def reply_in_aviline_chat(message: Message, db_session: AsyncSession, bot: Bot) -> None:
+    print('This happens again! try to debug me')
     quoted_message = message.reply_to_message.message_id
     ticket: Ticket = await TicketRelatedQueries(db_session).get_ticket_data_from_message(message_id=quoted_message)
 

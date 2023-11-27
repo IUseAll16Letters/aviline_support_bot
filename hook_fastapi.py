@@ -1,3 +1,5 @@
+import logging
+
 import uvicorn
 
 from aiogram import Bot, Dispatcher
@@ -13,6 +15,8 @@ from tgbot.routers import basic_handlers, contact_support_handlers, purchase_han
 from config import settings
 
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 app = FastAPI()
 main_bot = Bot(token=settings.TG_BOT_TOKEN, parse_mode="HTML")
 
@@ -58,8 +62,14 @@ async def bot_webhook(update: dict):
 
 @app.on_event("shutdown")
 async def on_shutdown():
+    print("I stop this mess")
+    logger.error(msg='Bot is stopping')
     await main_bot.session.close()
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=17282)
+    while True:
+        try:
+            uvicorn.run(app, host='127.0.0.1', port=8895)
+        except Exception as e:
+            logger.critical(msg='error occured!')
