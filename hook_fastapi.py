@@ -72,4 +72,4 @@ if __name__ == '__main__':
         try:
             uvicorn.run(app, host='127.0.0.1', port=8895)
         except Exception as e:
-            logger.critical(msg='error occured!')
+            logger.critical(msg=f'error occured! err={e}')

@@ -46,7 +46,6 @@ class Node:
                 return None
         msg = f"reversing from {self.s}"
         navigation.info(msg=msg)
-        del msg
         return self.prev.s
 
     def __eq__(self, other):

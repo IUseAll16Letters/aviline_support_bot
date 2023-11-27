@@ -85,9 +85,9 @@ async def user_sent_bad_name(message: Message, state: FSMContext, bot: Bot) -> N
     F.text.func(lambda s: re.search(GET_EMAIL_PATTERN, s.strip()) is not None),
 )
 async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot) -> None:
-    """Client must enter valid contact (email/phone)
-    state before: Contact -> enter_name -> enter_contact
-    state after: Contact -> enter_name -> enter_contact -> enter_message
+    """
+    Client entered valid contact (email/phone). Must match regexps from constants.py package.
+    State after validation = enter_message / add media
     """
     data = await state.update_data({'user_contact': message.text})
     text = render_template('client_enter_message.html', values=data)
@@ -104,8 +104,11 @@ async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot)
 
 @router.message(ContactSupportState.enter_contact)
 async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bot) -> None:
-    """User send the contact that doesn't pass filter from user_sent_valid_contact func."""
+    """
+    User send the contact that doesn't pass filter from user_sent_valid_contact func. Doesn't meet regexps.
+    """
     data = await state.get_data()
+    data['user_contact'] = message.text
     text = render_template('client_bad_contact.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -119,9 +122,8 @@ async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bo
 
 @router.message(ContactSupportState.enter_message)
 async def user_sent_message_or_media(message: Message, state: FSMContext, bot: Bot) -> None:
-    """Confirmation of clients input data
-        state before: Contact -> enter_name -> enter_contact -> enter_message
-        state after: Contact -> enter_name -> enter_contact -> enter_message -> entry_confirmation
+    """
+    Parse user message. Must be enter_message_state.
     """
     data = await state.get_data()
 
@@ -212,8 +214,6 @@ async def user_confirmed_message(
         if a:
             ticket_related_messages.extend(await bot.send_media_group(chat_id=aviline_chat_id, media=a))
 
-        del m, a, d
-
         await TicketRelatedQueries(db_session).create_user_media_attached(
             media=media,
             ticket_id=ticket.id,
@@ -265,13 +265,10 @@ async def reply_in_aviline_chat(message: Message, db_session: AsyncSession, bot:
             await TicketRelatedQueries(db_session).close_ticket(ticket_id=ticket.id)
             await db_session.commit()
 
-        del values, client_answer_keyboard, text, response
-    del ticket, quoted_message
 
-
-@router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}))
-async def other_trash_talk(message: Message) -> None:
-    ...
+# @router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}))
+# async def other_trash_talk(message: Message) -> None:
+#     ...
 
 
 @router.callback_query(F.data.in_({CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE}))

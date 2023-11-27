@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.constants import AVAILABLE_SERVICES, CONFIRMATION_MESSAGE
+from tgbot.constants import AVAILABLE_SERVICES, VERIFY_ENTRY
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils.template_engine import render_template
 from tgbot.crud import ProductRelatedQueries, get_product_problems
@@ -60,7 +60,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
 
         elif template == 'warranty_confirm_entry.html':
             keyboard = get_inline_keyboard_builder(
-                iterable=[CONFIRMATION_MESSAGE],
+                iterable=[VERIFY_ENTRY],
                 row_col=(1, 1),
             )
 

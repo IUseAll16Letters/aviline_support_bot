@@ -43,8 +43,8 @@ async def main() -> None:
             await dp.start_polling(bot)
         except (KeyboardInterrupt, SystemExit):
             break
-        finally:
-            await dp.storage.close()
+
+    await dp.storage.close()
 
 
 if __name__ == '__main__':

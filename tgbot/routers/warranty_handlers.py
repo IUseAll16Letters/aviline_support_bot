@@ -5,7 +5,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from tgbot.cache import RedisAdapter
-from tgbot.constants import CONFIRMATION_MESSAGE, WARRANTY_CHANGE_CARD, WARRANTY_CHANGE_CONTACTS, WARRANTY_CONFIRM_MAIL
+from tgbot.constants import WARRANTY_CHANGE_CARD, WARRANTY_CHANGE_CONTACTS, WARRANTY_CONFIRM_MAIL, \
+    VERIFY_ENTRY, VERIFY_SENDING
 from config.settings import SMTP_MAIL_PARAMS
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import WarrantyState
@@ -94,13 +95,13 @@ async def confirm_warranty_entry(message: Message, state: FSMContext, bot: Bot):
         chat_id=data['chat_id'],
         message_id=data['message_id'],
         text=text,
-        keyboard=get_inline_keyboard_builder([CONFIRMATION_MESSAGE]),
+        keyboard=get_inline_keyboard_builder([VERIFY_ENTRY]),
         bot=bot,
     )
     await message.delete()
 
 
-@router.callback_query(F.data == CONFIRMATION_MESSAGE, WarrantyState.confirm_entry)
+@router.callback_query(F.data == VERIFY_ENTRY, WarrantyState.confirm_entry)
 async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     """confirmed input data correct, now enter contact + warranty card"""
     await state.set_state(WarrantyState.approval_docs_contact)
@@ -130,7 +131,6 @@ async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FS
         keyboard=get_inline_keyboard_builder(iterable=keyboard_buttons, row_col=(1, 1)),
         bot=bot,
     )
-    del keyboard_buttons
 
 
 @router.message(WarrantyState.approval_docs_contact)
@@ -180,7 +180,6 @@ async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
     )
 
     await message.delete()
-    del keyboard_buttons
 
 
 @router.callback_query(
@@ -216,10 +215,9 @@ async def clear_field(callback_query: CallbackQuery, state: FSMContext, bot: Bot
         keyboard=get_inline_keyboard_builder(iterable=keyboard_buttons, row_col=(1, 1)),
         bot=bot,
     )
-    del keyboard_buttons
 
 
-@router.callback_query(F.data == CONFIRMATION_MESSAGE, WarrantyState.approval_docs_contact)
+@router.callback_query(F.data == VERIFY_SENDING, WarrantyState.approval_docs_contact)
 async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     data = await state.get_data()
     await edit_base_message(

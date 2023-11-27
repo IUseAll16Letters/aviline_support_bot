@@ -20,6 +20,7 @@ async def get_redis_storage():
         try:
             await redis.ping()
             msg = f'Redis successfully connected to: redis:///{host}:{port}/{db}, from {i} attempt'
+            print(msg)
             redis_logger.info(msg=msg)
             return redis
         except ConnectionError as e:
