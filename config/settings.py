@@ -62,7 +62,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -202,3 +202,4 @@ MAX_WARRANTY_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # Max file size allowed for wa
 LOG_FILE_NAME = 'telegram_bot.log'
 # LOG_FILE_LOCATION = Path('/var') / 'log' / 'tgbot' / LOG_FILE_NAME
 LOG_FILE_LOCATION = BASE_DIR / 'var' / 'log' / 'tgbot' / LOG_FILE_NAME
+LOGGING_FORMATTER = '%(asctime)s %(levelname)s:%(name)s: %(message)s'

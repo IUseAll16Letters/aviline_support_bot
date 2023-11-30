@@ -5,7 +5,7 @@ import logging.handlers as handlers
 from aiogram.loggers import event, dispatcher, middlewares
 
 
-from config.settings import DEBUG, LOG_FILE_LOCATION
+from config.settings import DEBUG, LOG_FILE_LOCATION, LOGGING_FORMATTER
 
 
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.WARNING)
@@ -39,7 +39,7 @@ file_rotation_handler = handlers.TimedRotatingFileHandler(
     when='midnight',
     backupCount=7,
 )
-file_rotation_formatter = logging.Formatter('%(asctime)s %(levelname)s:%(name)s: %(message)s')
+file_rotation_formatter = logging.Formatter(LOGGING_FORMATTER)
 file_rotation_handler.setLevel(logging.INFO)
 file_rotation_handler.setFormatter(file_rotation_formatter)
 

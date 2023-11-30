@@ -43,12 +43,12 @@ async def main() -> None:
             await dp.start_polling(bot)
         except (KeyboardInterrupt, SystemExit):
             break
+        except Exception as e:
+            msg = f'Unknown error caught with Exception. err = {e}'
+            logging.critical(msg=msg)
 
     await dp.storage.close()
 
 
 if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        ...
+    asyncio.run(main())

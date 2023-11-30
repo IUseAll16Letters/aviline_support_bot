@@ -1,17 +1,13 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
-class BaseState(StatesGroup):
-    select_service = State()
-
-
-class PurchaseState(BaseState):
+class PurchaseState(StatesGroup):
     select_product = State()
     select_sub_product = State()
     product_description = State()
 
 
-class TechSupportState(BaseState):
+class TechSupportState(StatesGroup):
     select_product = State()
     product_problems = State()
     problem_details = State()
