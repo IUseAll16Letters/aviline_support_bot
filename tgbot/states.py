@@ -14,6 +14,7 @@ class TechSupportState(StatesGroup):
 
 
 class ContactSupportState(StatesGroup):
+    confirm_policy = State()
     enter_name = State()
     enter_contact = State()
     enter_message = State()

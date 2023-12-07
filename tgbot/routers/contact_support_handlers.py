@@ -21,7 +21,7 @@ router = Router()
 
 
 @router.callback_query(F.data == 'contact_support')
-async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+async def user_accept_policy(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
     minutes, seconds = await RedisAdapter.check_lock_ttl(user_id=callback_query.from_user.id)
 
     if minutes not in (-2, -1):
@@ -31,6 +31,20 @@ async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot
         )
         return
 
+    data = await refresh_message_data_from_callback_query(callback_query, state)
+    text = render_template('privacy_policy.html', values=data)
+    await edit_base_message(
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
+        text=text,
+        keyboard=get_inline_keyboard_builder(iterable=[CONFIRMATION_MESSAGE]),
+        bot=bot,
+    )
+    await state.set_state(ContactSupportState.confirm_policy)
+
+
+@router.callback_query(F.data == CONFIRMATION_MESSAGE, ContactSupportState.confirm_policy)
+async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
     data = await refresh_message_data_from_callback_query(callback_query, state)
     text = render_template('client_enter_name.html', values=data)
     await edit_base_message(

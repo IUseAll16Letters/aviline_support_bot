@@ -47,8 +47,8 @@ async def product_subproduct_selected(
 
     try:
         sub_products = await ProductRelatedQueries(db_session).get_sub_products(product)
+        data = await refresh_message_data_from_callback_query(callback_query, state, product=product)
         if sub_products:
-            data = await refresh_message_data_from_callback_query(callback_query, state, product=callback_query.data)
             text = render_template('sub_products_list.html', values=data)
             await edit_base_message(
                 chat_id=data['chat_id'],

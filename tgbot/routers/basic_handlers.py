@@ -54,6 +54,10 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
                 row_col=(2, 2),
             )
         elif template == "product_description.html":
+            product_details = await ProductRelatedQueries(db_session=db_session)\
+                .get_product_detail(product_name=data["product"])
+            data['description'] = product_details.description
+            data['attachment'] = product_details.attachment
             keyboard = get_inline_keyboard_builder(
                 support_reachable=True,
             )
@@ -75,7 +79,8 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
             reply_markup=keyboard.as_markup(),
         )
     except Exception as e:
-        msg = f"Backward_reversing. Could not reverse, state: {await state.get_state()}. Error: {e}"
+        msg = f"Backward_reversing. Could not reverse, state: {await state.get_state()}. " \
+              f"Error: {e.__class__.__name__}. {e}"
         navigation.error(msg=msg)
         await callback_query.answer("Возникла ошибка возврата.\nПожалуйста, перезапустите бота через "
-                                    "/start или свяжитесь с техподдержкой")
+                                    "/start или свяжитесь с техподдержкой по телефону на сайте.")

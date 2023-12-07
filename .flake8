@@ -12,6 +12,7 @@ exclude =
     aviline/views.py,
     aviline/validators.py,
     manage.py,
+    tests/,
 
 max_line_length = 120
 
