@@ -71,6 +71,7 @@ def get_navigation() -> Node:
     sub_product = Node(PurchaseState.select_sub_product, pre=purchase)
     product_desc = Node(PurchaseState.product_description, pre=purchase)
 
+    warranty_confirm_policy = Node(WarrantyState.confirm_policy, pre=start)
     warranty_describe = Node(WarrantyState.describe_problem, pre=start)
     warranty_where_when = Node(WarrantyState.where_when_buy, pre=warranty_describe)
     warranty_city = Node(WarrantyState.location, pre=warranty_where_when)
@@ -105,6 +106,7 @@ template_from_state = {
     ContactSupportState.enter_contact: "client_enter_contact.html",
     ContactSupportState.enter_message: "client_enter_message.html",
     ContactSupportState.entry_confirmation: "client_message_confirm.html",
+    WarrantyState.confirm_policy: 'privacy_policy.html',
     WarrantyState.describe_problem: 'warranty_describe_problem.html',
     WarrantyState.where_when_buy: 'warranty_where_when_buy.html',
     WarrantyState.location: 'warranty_location.html',

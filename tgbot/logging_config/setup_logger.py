@@ -1,4 +1,5 @@
-__all__ = ('redis_logger', 'utils_logger', 'handlers_logger', 'waster_queries', 'navigation', 'mailing', 'database')
+__all__ = ('redis_logger', 'utils_logger', 'handlers_logger', 'waster_queries', 'navigation', 'mailing', 'database',
+           'middleware_debug')
 
 import logging
 import logging.handlers as handlers
@@ -8,29 +9,33 @@ from aiogram.loggers import event, dispatcher, middlewares
 from config.settings import DEBUG, LOG_FILE_LOCATION, LOGGING_FORMATTER
 
 
-logging.basicConfig(level=logging.DEBUG if DEBUG else logging.WARNING)
-base_logger = logging.Logger(name='tgbot', level=logging.DEBUG if DEBUG else logging.WARNING)
+logging_level = logging.DEBUG if DEBUG else logging.WARNING
+logging.basicConfig(level=logging_level)
+base_logger = logging.Logger(name='tgbot', level=logging_level)
+
+middleware_debug = base_logger.getChild('middleware_get_name')
+middleware_debug.setLevel(logging.DEBUG)
 
 redis_logger = base_logger.getChild('redis')
-redis_logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+redis_logger.setLevel(logging_level)
 
 utils_logger = base_logger.getChild('utils')
-utils_logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+utils_logger.setLevel(logging_level)
 
 handlers_logger = base_logger.getChild('handlers')
-handlers_logger.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+handlers_logger.setLevel(logging_level)
 
 waster_queries = base_logger.getChild('wasted_basic')
-waster_queries.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+waster_queries.setLevel(logging_level)
 
 navigation = base_logger.getChild('navigation')
-navigation.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+navigation.setLevel(logging_level)
 
 mailing = base_logger.getChild('mailing')
-mailing.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+mailing.setLevel(logging_level)
 
 database = base_logger.getChild('database')
-mailing.setLevel(logging.DEBUG if DEBUG else logging.WARNING)
+mailing.setLevel(logging_level)
 
 file_rotation_handler = handlers.TimedRotatingFileHandler(
     filename=LOG_FILE_LOCATION,
@@ -47,6 +52,7 @@ event.addHandler(file_rotation_handler)
 dispatcher.addHandler(file_rotation_handler)
 middlewares.addHandler(file_rotation_handler)
 
+middleware_debug.addHandler(file_rotation_handler)
 redis_logger.addHandler(file_rotation_handler)
 utils_logger.addHandler(file_rotation_handler)
 waster_queries.addHandler(file_rotation_handler)

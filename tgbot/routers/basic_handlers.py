@@ -4,7 +4,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.constants import AVAILABLE_SERVICES, VERIFY_ENTRY
+from tgbot.constants import AVAILABLE_SERVICES, VERIFY_ENTRY, CONFIRM_POLICY
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils.template_engine import render_template
 from tgbot.crud import ProductRelatedQueries, get_product_problems
@@ -67,6 +67,8 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
                 iterable=[VERIFY_ENTRY],
                 row_col=(1, 1),
             )
+        elif template == 'privacy_policy.html':
+            keyboard = get_inline_keyboard_builder(iterable=[CONFIRM_POLICY])
 
         if reverse_state is None:
             await state.clear()
@@ -84,3 +86,8 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
         navigation.error(msg=msg)
         await callback_query.answer("Возникла ошибка возврата.\nПожалуйста, перезапустите бота через "
                                     "/start или свяжитесь с техподдержкой по телефону на сайте.")
+        await callback_query.message.edit_text(
+            text=render_template('start.html'),
+            reply_markup=get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True, row_col=(2, 1)).as_markup(),
+        )
+        await state.clear()

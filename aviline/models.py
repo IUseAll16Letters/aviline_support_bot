@@ -109,7 +109,7 @@ class ProductProblem(CreateUpdateProxy):
 
 
 class Ticket(CreateUpdateProxy):
-    customer = models.PositiveIntegerField(editable=False)
+    customer = models.PositiveBigIntegerField(editable=False)
     question = models.TextField(
         blank=False,
         null=False,

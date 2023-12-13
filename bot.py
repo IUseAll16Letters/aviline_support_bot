@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from asyncio import CancelledError
 
 from aiogram import Bot, Dispatcher
 
@@ -7,6 +8,7 @@ from tgbot.utils import polling_on_startup, polling_on_shutdown
 from tgbot.routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers, \
     warranty_handlers, debug_handlers
 from tgbot.middleware import DbSessionMiddleware
+from tgbot.middleware.logger_middleware import LoggerMiddleware
 from tgbot.database import get_connection_pool
 from tgbot.cache.connection import get_redis_or_mem_storage
 
@@ -37,17 +39,14 @@ async def main() -> None:
 
     dp.message.middleware(DbSessionMiddleware(get_connection_pool()))
     dp.callback_query.middleware(DbSessionMiddleware(get_connection_pool()))
+    dp.callback_query.middleware(LoggerMiddleware())
 
-    while True:
-        try:
-            await dp.start_polling(bot)
-        except (KeyboardInterrupt, SystemExit):
-            break
-        except Exception as e:
-            msg = f'Unknown error caught with Exception. err = {e}'
-            logging.critical(msg=msg)
-
-    await dp.storage.close()
+    try:
+        await dp.start_polling(bot)
+    except CancelledError:
+        ...
+    finally:
+        await dp.storage.close()
 
 
 if __name__ == '__main__':

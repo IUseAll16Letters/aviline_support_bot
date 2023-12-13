@@ -1,5 +1,5 @@
 from aiogram import Router, F, Bot
-from aiogram.filters import or_f
+from aiogram.filters import StateFilter
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from jinja2 import TemplateSyntaxError
@@ -36,7 +36,7 @@ async def purchase_selected(
     await state.set_state(PurchaseState.select_product)
 
 
-@router.callback_query(or_f(PurchaseState.select_product, PurchaseState.select_sub_product))
+@router.callback_query(StateFilter(PurchaseState.select_product, PurchaseState.select_sub_product))
 async def product_subproduct_selected(
         callback_query: CallbackQuery,
         state: FSMContext,

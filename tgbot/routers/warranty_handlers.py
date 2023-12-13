@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery, Message
 
 from tgbot.cache import RedisAdapter
 from tgbot.constants import WARRANTY_CHANGE_CARD, WARRANTY_CHANGE_CONTACTS, WARRANTY_CONFIRM_MAIL, \
-    VERIFY_ENTRY, VERIFY_SENDING
+    VERIFY_ENTRY, VERIFY_SENDING, CONFIRM_POLICY
 from config.settings import SMTP_MAIL_PARAMS
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import WarrantyState
@@ -20,11 +20,24 @@ router = Router()
 
 
 @router.callback_query(F.data == 'warranty')
+async def confirm_policy(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+    text = render_template('privacy_policy.html')
+    data = await refresh_message_data_from_callback_query(callback_query, state)
+    await edit_base_message(
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
+        text=text,
+        keyboard=get_inline_keyboard_builder(iterable=[CONFIRM_POLICY]),
+        bot=bot,
+    )
+    await state.set_state(WarrantyState.confirm_policy)
+
+
+@router.callback_query(F.data == CONFIRM_POLICY, WarrantyState.confirm_policy)
 async def enter_problem(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     """ask to describe problem"""
     data = await refresh_message_data_from_callback_query(callback_query, state)
     text = render_template('warranty_describe_problem.html')
-    await state.set_state(WarrantyState.describe_problem)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -32,6 +45,7 @@ async def enter_problem(callback_query: CallbackQuery, state: FSMContext, bot: B
         keyboard=get_inline_keyboard_builder(),
         bot=bot,
     )
+    await state.set_state(WarrantyState.describe_problem)
 
 
 @router.message(WarrantyState.describe_problem)

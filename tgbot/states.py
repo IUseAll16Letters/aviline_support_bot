@@ -22,6 +22,7 @@ class ContactSupportState(StatesGroup):
 
 
 class WarrantyState(StatesGroup):
+    confirm_policy = State()
     describe_problem = State()
     where_when_buy = State()
     location = State()
