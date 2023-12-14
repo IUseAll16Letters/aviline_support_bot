@@ -9,6 +9,7 @@ from aiogram.loggers import event, dispatcher, middlewares
 from config.settings import DEBUG, LOG_FILE_LOCATION, LOGGING_FORMATTER
 
 
+# logging_level = logging.DEBUG
 logging_level = logging.DEBUG if DEBUG else logging.WARNING
 logging.basicConfig(level=logging_level)
 base_logger = logging.Logger(name='tgbot', level=logging_level)
@@ -45,7 +46,7 @@ file_rotation_handler = handlers.TimedRotatingFileHandler(
     backupCount=7,
 )
 file_rotation_formatter = logging.Formatter(LOGGING_FORMATTER)
-file_rotation_handler.setLevel(logging.INFO)
+file_rotation_handler.setLevel(logging.DEBUG)
 file_rotation_handler.setFormatter(file_rotation_formatter)
 
 event.addHandler(file_rotation_handler)

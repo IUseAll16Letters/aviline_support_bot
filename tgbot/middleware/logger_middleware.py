@@ -10,5 +10,6 @@ class LoggerMiddleware(BaseMiddleware):
         super().__init__()
 
     async def __call__(self, handler: Callable, event: TelegramObject, data: Dict[str, Any]) -> Any:
+        print(handler.__class__)
         middleware_debug.debug(msg=f'{handler.__wrapped__} handler called')
         return await handler(event, data)
