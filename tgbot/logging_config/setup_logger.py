@@ -3,19 +3,20 @@ __all__ = ('redis_logger', 'utils_logger', 'handlers_logger', 'waster_queries', 
 
 import logging
 import logging.handlers as handlers
-from aiogram.loggers import event, dispatcher, middlewares
-
 
 from config.settings import DEBUG, LOG_FILE_LOCATION, LOGGING_FORMATTER
 
+# log_queue = asyncio.Queue()
+# qh = handlers.QueueHandler(log_queue)
 
-# logging_level = logging.DEBUG
 logging_level = logging.DEBUG if DEBUG else logging.WARNING
+# logging_level = logging.DEBUG
 logging.basicConfig(level=logging_level)
+
 base_logger = logging.Logger(name='tgbot', level=logging_level)
 
 middleware_debug = base_logger.getChild('middleware_get_name')
-middleware_debug.setLevel(logging.DEBUG)
+middleware_debug.setLevel(logging_level)
 
 redis_logger = base_logger.getChild('redis')
 redis_logger.setLevel(logging_level)
@@ -49,15 +50,16 @@ file_rotation_formatter = logging.Formatter(LOGGING_FORMATTER)
 file_rotation_handler.setLevel(logging.DEBUG)
 file_rotation_handler.setFormatter(file_rotation_formatter)
 
-event.addHandler(file_rotation_handler)
-dispatcher.addHandler(file_rotation_handler)
-middlewares.addHandler(file_rotation_handler)
+# event.addHandler(file_rotation_handler)
+# dispatcher.addHandler(file_rotation_handler)
+# middlewares.addHandler(file_rotation_handler)
 
-middleware_debug.addHandler(file_rotation_handler)
-redis_logger.addHandler(file_rotation_handler)
-utils_logger.addHandler(file_rotation_handler)
-waster_queries.addHandler(file_rotation_handler)
-navigation.addHandler(file_rotation_handler)
-mailing.addHandler(file_rotation_handler)
-database.addHandler(file_rotation_handler)
-handlers_logger.addHandler(file_rotation_handler)
+
+# middleware_debug.addHandler(qh)
+# redis_logger.addHandler(qh)
+# utils_logger.addHandler(qh)
+# waster_queries.addHandler(qh)
+# navigation.addHandler(qh)
+# mailing.addHandler(qh)
+# database.addHandler(qh)
+# handlers_logger.addHandler(qh)

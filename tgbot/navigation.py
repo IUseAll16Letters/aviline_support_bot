@@ -1,13 +1,10 @@
 __all__ = ("Navigation", "template_from_state")
 
-import logging
 from typing import Optional, List
 
 from tgbot.states import PurchaseState, ContactSupportState, WarrantyState, TechSupportState
 from aiogram.fsm.state import State
 from tgbot.logging_config.setup_logger import navigation
-
-navigation.setLevel(logging.DEBUG)
 
 
 class Node:

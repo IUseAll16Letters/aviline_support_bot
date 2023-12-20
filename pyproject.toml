@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+pythonpath = [
+    '.', 'tgbot',
+]
+
+asyncio_mode='auto'

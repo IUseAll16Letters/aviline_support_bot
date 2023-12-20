@@ -12,9 +12,8 @@ def log_files_list() -> List[Path]:
     return sorted(files, reverse=True)
 
 
-def parse_log_file(file_dest: Path) -> str:
+def parse_log_file(file_dest: Path, err_status_item: int = 2) -> str:
     file_lines_str: List[str] = []
-    err_status_item = 2
     log_types_colors: Dict[str, str] = {
         'INFO': 'dark',
         'DEBUG': 'primary',
@@ -26,14 +25,14 @@ def parse_log_file(file_dest: Path) -> str:
     with open(file_dest, 'r', encoding='utf-8') as f:
         for line in f.readlines():
             if line.startswith('20'):
-                line = line.split()
+                line = line.replace('<', '').replace('>', '').split()
                 status_color = log_types_colors[line[err_status_item].split(':')[0]]
-                line_as_html = f'<p class="text-{status_color}">' + ' '.join(line) + '</p>\n'
+                line_as_html = f'<p class="text-{status_color}">' + ' '.join(line) + '</p>'
                 file_lines_str.append(line_as_html)
             else:
                 file_lines_str.append(line)
 
-    return f'<hr><h3>{file_dest.name}</h3>\n' + ''.join(file_lines_str)
+    return f'<hr><h3>{file_dest.name}</h3>\n' + '\n'.join(file_lines_str)
 
 
 def pack_log_files_as_html() -> str:
