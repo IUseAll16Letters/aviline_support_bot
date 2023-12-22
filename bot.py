@@ -35,7 +35,6 @@ async def main() -> None:
 
     dp.message.middleware(DbSessionMiddleware(get_connection_pool()))
     dp.callback_query.middleware(DbSessionMiddleware(get_connection_pool()))
-    # dp.callback_query.middleware(LoggerMiddleware())
 
     try:
         await dp.start_polling(bot)

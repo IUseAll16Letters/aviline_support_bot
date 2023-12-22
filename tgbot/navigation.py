@@ -81,7 +81,7 @@ def get_navigation() -> Node:
     sub_product.next = [confirm_policy]
     problem_detail.next = [confirm_policy]
 
-    enter_name = Node(ContactSupportState.enter_name, pre=confirm_policy)
+    enter_name = Node(ContactSupportState.enter_name, pre=start)
     enter_contact = Node(ContactSupportState.enter_contact, pre=enter_name)
     enter_message = Node(ContactSupportState.enter_message, pre=enter_contact)
     confirm = Node(ContactSupportState.entry_confirmation, pre=enter_message)
