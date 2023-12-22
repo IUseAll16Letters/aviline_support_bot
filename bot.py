@@ -12,8 +12,6 @@ from tgbot.cache.connection import get_redis_or_mem_storage
 
 from config import settings
 
-# logging.basicConfig(level=logging.DEBUG)
-
 
 async def main() -> None:
     bot = Bot(token=settings.TG_BOT_TOKEN, parse_mode='html')

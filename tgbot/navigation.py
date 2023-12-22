@@ -1,4 +1,4 @@
-__all__ = ("Navigation", "template_from_state")
+__all__ = ("get_navigation", "template_from_state")
 
 from typing import Optional, List
 
@@ -88,8 +88,6 @@ def get_navigation() -> Node:
 
     return start
 
-
-Navigation: Node = get_navigation()
 
 template_from_state = {
     None: "start.html",

@@ -8,8 +8,8 @@ from tgbot.constants import AVAILABLE_SERVICES, VERIFY_ENTRY, CONFIRM_POLICY
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.utils.template_engine import render_template
 from tgbot.crud import ProductRelatedQueries, get_product_problems
-from tgbot.navigation import Navigation, template_from_state
-from tgbot.logging_config import navigation
+from tgbot.navigation import get_navigation, template_from_state
+from tgbot.logging_config import navigation as navigation_logger
 
 
 router = Router()
@@ -35,9 +35,10 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
     Node tree implementation using dfs with states as Node value and next/prev as parent/child Nodes
     """
     try:
+        navigation = get_navigation()
         current_state = await state.get_state()
         data = await state.get_data()
-        reverse_state = Navigation.find(current_state).reverse_state(par=data.get("branch"))  # find node, then parent
+        reverse_state = navigation.find(current_state).reverse_state(par=data.get("branch"))  # find node, then parent
 
         keyboard = get_inline_keyboard_builder()
         template = template_from_state[reverse_state]
@@ -83,7 +84,7 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
     except Exception as e:
         msg = f"Backward_reversing. Could not reverse, state: {await state.get_state()}. " \
               f"Error: {e.__class__.__name__}. {e}"
-        navigation.error(msg=msg)
+        navigation_logger.error(msg=msg)
         await callback_query.answer("Возникла ошибка возврата.\nПожалуйста, перезапустите бота через "
                                     "/start или свяжитесь с техподдержкой по телефону на сайте.")
         await callback_query.message.edit_text(
