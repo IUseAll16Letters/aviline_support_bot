@@ -1,6 +1,4 @@
-__all__ = ("compose_user_mail_text", "send_email_to_aviline")
-
-from typing import Dict
+__all__ = ("send_email_to_aviline", )
 
 import aiosmtplib
 
@@ -9,17 +7,10 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
 from config.settings import SMTP_MAIL_PARAMS, EMAIL_HOST_USER
-from tgbot.utils import render_template
 from tgbot.logging_config import mailing
 
 
-def compose_user_mail_text(data: Dict[str, str]):
-    text = render_template('warranty_email_template.html', values=data)
-    return text
-
-
-# TODO change signature
-async def send_email_to_aviline(subject, text, warranty_card: bytes, warranty_basename: str, text_type: str = 'plain'):
+async def send_email_to_aviline(subject, text, warranty_card: bytes, warranty_basename: str):
     sender = EMAIL_HOST_USER
     to = [SMTP_MAIL_PARAMS['send_to']]
     msg = MIMEMultipart()

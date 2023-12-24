@@ -10,7 +10,7 @@ from tgbot.constants import WARRANTY_CHANGE_CARD, WARRANTY_CHANGE_CONTACTS, WARR
 from config.settings import SMTP_MAIL_PARAMS
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import WarrantyState
-from tgbot.utils import render_template, edit_base_message, get_client_message, \
+from tgbot.utils import async_render_template, edit_base_message, get_client_message, \
     send_email_to_aviline, download_file_from_telegram_file_id, get_allowed_media_id
 from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
 from tgbot.logging_config import mailing
@@ -21,7 +21,7 @@ router = Router()
 
 @router.callback_query(F.data == 'warranty')
 async def confirm_policy(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
-    text = render_template('privacy_policy.html')
+    text = await async_render_template('privacy_policy.html')
     data = await refresh_message_data_from_callback_query(callback_query, state)
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -37,7 +37,7 @@ async def confirm_policy(callback_query: CallbackQuery, state: FSMContext, bot: 
 async def enter_problem(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     """ask to describe problem"""
     data = await refresh_message_data_from_callback_query(callback_query, state)
-    text = render_template('warranty_describe_problem.html')
+    text = await async_render_template('warranty_describe_problem.html')
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -52,7 +52,7 @@ async def enter_problem(callback_query: CallbackQuery, state: FSMContext, bot: B
 async def enter_purchase_location(message: Message, state: FSMContext, bot: Bot):
     """ask to enter where buy product"""
     data = await state.update_data({"client_problem": message.text})  # if not message text: raise error
-    text = render_template('warranty_where_when_buy.html')
+    text = await async_render_template('warranty_where_when_buy.html')
     await state.set_state(WarrantyState.where_when_buy)
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -68,7 +68,7 @@ async def enter_purchase_location(message: Message, state: FSMContext, bot: Bot)
 async def enter_client_location(message: Message, state: FSMContext, bot: Bot):
     """ask to enter his location"""
     data = await state.update_data({"client_where_buy": message.text})  # if not message text: raise error
-    text = render_template('warranty_location.html')
+    text = await async_render_template('warranty_location.html')
 
     await state.set_state(WarrantyState.location)
     await edit_base_message(
@@ -86,7 +86,7 @@ async def enter_car_brand(message: Message, state: FSMContext, bot: Bot):
     """enters his car brand"""
     await state.set_state(WarrantyState.car_brand)
     data = await state.update_data({"client_city": message.text})  # if not message text: raise error
-    text = render_template('warranty_client_car.html')
+    text = await async_render_template('warranty_client_car.html')
 
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -103,7 +103,7 @@ async def confirm_warranty_entry(message: Message, state: FSMContext, bot: Bot):
     """confirms all data correct"""
     await state.set_state(WarrantyState.confirm_entry)
     data = await state.update_data({"client_car": message.text})
-    text = render_template("warranty_confirm_entry.html", values=data)
+    text = await async_render_template("warranty_confirm_entry.html", values=data)
 
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -137,7 +137,7 @@ async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FS
     if user_message is not None and img_ttl > 0:
         keyboard_buttons.update(WARRANTY_CONFIRM_MAIL)
 
-    text = render_template('warranty_enter_approval_docs.html', values=data)
+    text = await async_render_template('warranty_enter_approval_docs.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -184,7 +184,7 @@ async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
     if data.get('user_warranty_card', False) and data.get('user_warranty_message') is not None:
         keyboard_buttons.update(WARRANTY_CONFIRM_MAIL)
 
-    text = render_template("warranty_enter_approval_docs.html", values=data)
+    text = await async_render_template("warranty_enter_approval_docs.html", values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -220,7 +220,7 @@ async def clear_field(callback_query: CallbackQuery, state: FSMContext, bot: Bot
         keyboard_buttons.update(WARRANTY_CHANGE_CONTACTS)
 
     data = await state.update_data(data)
-    text = render_template("warranty_enter_approval_docs.html", values=data)
+    text = await async_render_template("warranty_enter_approval_docs.html", values=data)
 
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -237,7 +237,7 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
-        text=render_template("warranty_message_is_sending.html"),
+        text=(await async_render_template("warranty_message_is_sending.html")),
         keyboard=get_inline_keyboard_builder(),
         bot=bot,
     )
@@ -245,7 +245,7 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
     file = await RedisAdapter.get_client_warranty_image(callback_query.from_user.id)
 
     if file:
-        text = render_template("warranty_email_template.html", values=data)
+        text = await async_render_template("warranty_email_template.html", values=data)
         base_name = f'warranty_{callback_query.from_user.id}_' \
                     f'{datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")}.' \
                     f'{data.get("user_warranty_card", "jpg")}'
@@ -263,7 +263,7 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
         await edit_base_message(
             chat_id=data['chat_id'],
             message_id=data['message_id'],
-            text=render_template("warranty_message_OK.html"),
+            text=(await async_render_template("warranty_message_OK.html")),
             keyboard=get_inline_keyboard_builder(),
             bot=bot,
         )
@@ -281,7 +281,7 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
         await edit_base_message(
             chat_id=data['chat_id'],
             message_id=data['message_id'],
-            text=render_template('warranty_enter_approval_docs.html', values=data),
+            text=(await async_render_template('warranty_enter_approval_docs.html', values=data)),
             keyboard=get_inline_keyboard_builder(iterable=keyboard_buttons),
             bot=bot,
         )

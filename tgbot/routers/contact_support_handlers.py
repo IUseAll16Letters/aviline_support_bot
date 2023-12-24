@@ -12,7 +12,7 @@ from tgbot.models import Ticket
 from tgbot.states import ContactSupportState
 from tgbot.constants import CLEAN_PHONE_PATTERN, GET_PHONE_PATTERN, GET_EMAIL_PATTERN, GET_NAME_PATTERN, \
     CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE, AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID
-from tgbot.utils import render_template, get_client_message, parse_message_media, edit_base_message
+from tgbot.utils import async_render_template, get_client_message, parse_message_media, edit_base_message
 from tgbot.logging_config import handlers_logger
 from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
 from tgbot.filters import AvilineSupportChatFilter
@@ -32,7 +32,7 @@ async def user_accept_policy(callback_query: CallbackQuery, state: FSMContext, b
         return
 
     data = await refresh_message_data_from_callback_query(callback_query, state)
-    text = render_template('privacy_policy.html', values=data)
+    text = await async_render_template('privacy_policy.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -46,7 +46,7 @@ async def user_accept_policy(callback_query: CallbackQuery, state: FSMContext, b
 @router.callback_query(F.data == CONFIRMATION_MESSAGE, ContactSupportState.confirm_policy)
 async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
     data = await refresh_message_data_from_callback_query(callback_query, state)
-    text = render_template('client_enter_name.html', values=data)
+    text = await async_render_template('client_enter_name.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -64,7 +64,7 @@ async def user_sent_valid_name(message: Message, state: FSMContext, bot: Bot) ->
     state after: Contact -> enter_name -> enter_contact
     after message input - it must be removed in order to save client's chat space and convenience"""
     data = await state.update_data({"username": message.text})
-    text = render_template('client_enter_contact.html', values=data)
+    text = await async_render_template('client_enter_contact.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -104,7 +104,7 @@ async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot)
     State after validation = enter_message / add media
     """
     data = await state.update_data({'user_contact': message.text})
-    text = render_template('client_enter_message.html', values=data)
+    text = await async_render_template('client_enter_message.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -123,7 +123,7 @@ async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bo
     """
     data = await state.get_data()
     data['user_contact'] = message.text
-    text = render_template('client_bad_contact.html', values=data)
+    text = await async_render_template('client_bad_contact.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -158,7 +158,7 @@ async def user_sent_message_or_media(message: Message, state: FSMContext, bot: B
     await state.update_data(data)
 
     try:
-        text = render_template('client_message_confirm.html', values=data)
+        text = await async_render_template('client_message_confirm.html', values=data)
 
         if data['user_message'] is None:
             kb = get_inline_keyboard_builder()
@@ -178,7 +178,7 @@ async def user_sent_message_or_media(message: Message, state: FSMContext, bot: B
         data['err'] = 'Возникла ошибка при отправке сообщения. ' \
                       'Пожалуйста вернитесь на шаг назад и повторите отправку данных заново'
 
-        text = render_template('client_message_confirm.html', values=data)
+        text = await async_render_template('client_message_confirm.html', values=data)
         kb = get_inline_keyboard_builder()
         await edit_base_message(
             chat_id=data['chat_id'],
@@ -232,7 +232,7 @@ async def user_confirmed_message(
             media=media,
             ticket_id=ticket.id,
         )
-    client_message_full_render = render_template('support_client_message_with_contacts.html', values=data)
+    client_message_full_render = await async_render_template('support_client_message_with_contacts.html', values=data)
     ticket_related_messages.append(await bot.send_message(chat_id=aviline_chat_id, text=client_message_full_render))
 
     await TicketRelatedQueries(db_session).create_ticket_message(
@@ -241,7 +241,7 @@ async def user_confirmed_message(
     )
 
     await db_session.commit()
-    text = render_template('message_sent_success.html', values=data)
+    text = await async_render_template('message_sent_success.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -263,7 +263,7 @@ async def reply_in_aviline_chat(message: Message, db_session: AsyncSession, bot:
         pass
     else:
         values = {"question": ticket.question, "answer": message.text}
-        text = render_template('reply_client_question.html', values=values)
+        text = await async_render_template('reply_client_question.html', values=values)
         client_answer_keyboard = get_inline_keyboard_builder(
             is_initial=True,
             iterable=[CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE],

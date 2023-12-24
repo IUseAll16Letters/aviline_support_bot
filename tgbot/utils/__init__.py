@@ -6,7 +6,7 @@ __all__ = (
     "edit_base_message",
     "get_client_message",
     "parse_message_media",
-    "render_template",
+    "async_render_template",
     "webhook_on_startup",
     "polling_on_startup",
     "webhook_on_shutdown",
