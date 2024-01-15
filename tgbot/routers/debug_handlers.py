@@ -25,5 +25,5 @@ async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
 async def wasted_message(message: Message, state: FSMContext) -> None:
     logger_message = f"wasted message text: {message.text}, " \
                      f"at state: {await state.get_state()}, " \
-                     f"from_user: {message.from_user.id}"
+                     f"from_user: {message.from_user.id} in chat {message.chat.id}"
     waster_queries.debug(msg=logger_message)

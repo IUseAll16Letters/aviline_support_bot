@@ -11,10 +11,10 @@ from config import settings
 from tgbot.logging_config import redis_logger
 
 
-async def get_redis_storage():
+async def get_redis_storage(image_storage_db: int = 0):
     host = settings.CACHE[settings.DEBUG]['HOST']
     port = settings.CACHE[settings.DEBUG]['PORT']
-    db = settings.CACHE[settings.DEBUG]['DBS']['memstorage']
+    db = image_storage_db
     redis = Redis(host=host, port=port, db=db)
     for i in range(1, 4):
         try:

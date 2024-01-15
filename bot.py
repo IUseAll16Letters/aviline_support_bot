@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 
 from tgbot.utils import polling_on_startup, polling_on_shutdown
 from tgbot.routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers, \
-    warranty_handlers, debug_handlers
+    warranty_handlers, debug_handlers, aviline_admin_chats
 from tgbot.middleware import DbSessionMiddleware
 from tgbot.database import get_connection_pool
 from tgbot.cache.connection import get_redis_or_mem_storage
@@ -23,6 +23,7 @@ async def main() -> None:
 
     dp.include_routers(
         basic_handlers.router,
+        aviline_admin_chats.router,
         tech_support_handlers.router,
         purchase_handlers.router,
         contact_support_handlers.router,
@@ -37,7 +38,7 @@ async def main() -> None:
     dp.callback_query.middleware(DbSessionMiddleware(get_connection_pool()))
 
     try:
-        await dp.start_polling(bot)
+        await dp.start_polling(bot, polling_timeout=30)
     except CancelledError:
         ...
     finally:

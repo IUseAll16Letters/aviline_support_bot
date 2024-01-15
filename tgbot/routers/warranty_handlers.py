@@ -121,7 +121,7 @@ async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FS
     await state.set_state(WarrantyState.approval_docs_contact)
     data = await state.get_data()
 
-    img_ttl = await RedisAdapter.check_client_warranty_image_exists(user_id=callback_query.from_user.id)
+    img_ttl = await RedisAdapter().check_client_warranty_image_exists(user_id=callback_query.from_user.id)
     user_message = data.get('user_warranty_message')
 
     keyboard_buttons = {}
@@ -165,7 +165,7 @@ async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
     if data.get('user_warranty_message'):
         keyboard_buttons.update(WARRANTY_CHANGE_CONTACTS)
 
-    file_saved_to_redis = await RedisAdapter.check_client_warranty_image_exists(message.from_user.id)
+    file_saved_to_redis = await RedisAdapter().check_client_warranty_image_exists(message.from_user.id)
     if not data.get('user_warranty_card', False) or file_saved_to_redis < 0:
         file_id, ext = get_allowed_media_id(message)
         if file_id == -1:
@@ -173,7 +173,7 @@ async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
                           "Вы можете уменьшить качество или обрезать несущественную информацию с изображения."
         elif file_id != -2:
             user_warranty_card = await download_file_from_telegram_file_id(bot_instance=bot, telegram_file_id=file_id)
-            await RedisAdapter.save_client_warranty_image(user_id=message.from_user.id, file=user_warranty_card)
+            await RedisAdapter().save_client_warranty_image(user_id=message.from_user.id, file=user_warranty_card)
             data['user_warranty_card'] = ext
             keyboard_buttons.update(WARRANTY_CHANGE_CARD)
     else:
@@ -205,7 +205,7 @@ async def clear_field(callback_query: CallbackQuery, state: FSMContext, bot: Bot
 
     if callback_query.data == "change_warranty_card":
         try:
-            await RedisAdapter.clear_client_warranty_image(user_id=callback_query.from_user.id)
+            await RedisAdapter().clear_client_warranty_image(user_id=callback_query.from_user.id)
         except Exception as e:
             msg = f"Could not delete the file for user: {callback_query.from_user.id}. Error: {e}"
             mailing.error(msg=msg)
@@ -242,7 +242,7 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
         bot=bot,
     )
 
-    file = await RedisAdapter.get_client_warranty_image(callback_query.from_user.id)
+    file = await RedisAdapter().get_client_warranty_image(callback_query.from_user.id)
 
     if file:
         text = await async_render_template("warranty_email_template.html", values=data)
@@ -256,7 +256,7 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
             warranty_basename=base_name,
         )
         try:
-            await RedisAdapter.clear_client_warranty_image(user_id=callback_query.from_user.id)
+            await RedisAdapter().clear_client_warranty_image(user_id=callback_query.from_user.id)
         except Exception as e:
             msg = f"Could not delete the file for user: {callback_query.from_user.id}. Error: {e}"
             mailing.error(msg=msg)

@@ -14,6 +14,7 @@ class Ticket(Base, TimeStampMixin):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     customer: Mapped[int] = mapped_column(BigInteger(), index=True, nullable=False)
     question: Mapped[str] = mapped_column(Text(), nullable=False)
+    telegram_message_id: Mapped[int] = mapped_column(BigInteger(), nullable=True)
 
     is_solved: Mapped[bool] = mapped_column(Boolean(), default=False)
 

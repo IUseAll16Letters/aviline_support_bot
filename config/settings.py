@@ -19,6 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / "config" / '.env')
 
+DEBUG = int(os.getenv("DEBUG"))
+
 # All keys / tokens
 TG_BOT_TOKEN = os.getenv("BOT_TOKEN")
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -29,10 +31,13 @@ BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL")
 WEBHOOK_PATH = os.getenv("WEBHOOK_PATH")
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 
-AVILINE_TECH_CHAT_ID = int(os.getenv('AVILINE_TECH_CHAT_ID'))
-AVILINE_MANAGER_CHAT_ID = int(os.getenv('AVILINE_MANAGER_CHAT_ID'))
-
-DEBUG = int(os.getenv("DEBUG"))
+_DEBUG = DEBUG
+DEBUG = True
+AVILINE_DEBUG_CHAT_ID = int(os.getenv('AVILINE_DEBUG_CHAT_ID'))
+AVILINE_TECH_CHAT_ID = int(os.getenv('AVILINE_TECH_CHAT_ID')) if not DEBUG else AVILINE_DEBUG_CHAT_ID
+AVILINE_MANAGER_CHAT_ID = int(os.getenv('AVILINE_MANAGER_CHAT_ID')) if not DEBUG else AVILINE_DEBUG_CHAT_ID
+print(AVILINE_DEBUG_CHAT_ID, AVILINE_MANAGER_CHAT_ID, AVILINE_TECH_CHAT_ID)
+DEBUG = _DEBUG
 
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS.extend(os.getenv("ALLOWED_HOSTS").split(','))
@@ -158,18 +163,10 @@ CACHE = {
     1: {
         "HOST": "127.0.0.1",
         "PORT": 6379,
-        "DBS": {
-            'memstorage': 0,
-            'cache': 1,
-        },
     },
     0: {
         "HOST": os.getenv('REDIS_HOST'),
         "PORT": int(os.getenv("REDIS_PORT")),
-        "DBS": {
-            'memstorage': 0,
-            'cache': 1,
-        },
     },
 }
 

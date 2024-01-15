@@ -114,6 +114,7 @@ class Ticket(CreateUpdateProxy):
         blank=False,
         null=False,
     )
+    telegram_message_id = models.BigIntegerField(null=True)
 
     is_solved = models.BooleanField(default=False)
 

@@ -1,52 +1,49 @@
-from typing import Tuple, Union
-from redis.asyncio.client import Redis
 from datetime import timedelta
+from typing import Tuple, Union
 
-from tgbot.types import KeyLike
-from tgbot.logging_config import redis_logger
+from redis.asyncio.client import Redis
+
+# from tgbot.types import KeyLike
+# from tgbot.logging_config import redis_logger
+from ..types import KeyLike
+from ..logging_config import redis_logger
 from config import settings
 
 
 class RedisAdapter:
-    """Redis cache adapter object"""
+    """Redis memory storage adapter object"""
     host = settings.CACHE[settings.DEBUG]['HOST']
     port = settings.CACHE[settings.DEBUG]['PORT']
-    db = settings.CACHE[settings.DEBUG]['DBS']['cache']
+    db = 1  # Redis storage database 1 used for business logics, while 0 is for FSM
     redis = Redis(host=host, port=port, db=db)
     lock_ttl = settings.CACHE_SUPPORT_TTL
     image_ttl = settings.CACHE_IMAGE_TTL
     lock_prefix = "support_lock_"
     image_prefix = 'warranty_image_'
 
-    @classmethod
-    async def set_lock(cls, user_id: KeyLike):  # Typing should be set to Json_serializable
-        return await cls.redis.set(f"{cls.lock_prefix}{user_id}", 1, ex=timedelta(seconds=cls.lock_ttl))
+    async def set_lock(self, user_id: KeyLike):  # Typing should be set to Json_serializable
+        return await self.redis.set(f"{self.lock_prefix}{user_id}", 1, ex=timedelta(seconds=self.lock_ttl))
 
-    @classmethod
-    async def check_lock_ttl(cls, user_id: KeyLike) -> Union[int, Tuple[int, int]]:
+    async def check_lock_ttl(self, user_id: KeyLike) -> Union[int, Tuple[int, int]]:
         """return ttl in minutes"""
-        ttl = await cls.redis.ttl(f"{cls.lock_prefix}{user_id}")
+        ttl = await self.redis.ttl(f"{self.lock_prefix}{user_id}")
         if ttl == -2:
             return -2, -2
         elif ttl == -1:
-            msg = f"Got endless lock for {cls.lock_prefix}{user_id} key. Expected <{cls.lock_ttl}"
+            msg = f"Got endless lock for {self.lock_prefix}{user_id} key. Expected <{self.lock_ttl}"
             redis_logger.error(msg=msg)
             return -1, -1
         else:
             return ttl // 60, ttl % 60
 
-    @classmethod
-    async def save_client_warranty_image(cls, user_id: KeyLike, file) -> bool:
-        return await cls.redis.set(f"{cls.image_prefix}{user_id}", file, ex=timedelta(seconds=cls.image_ttl))
+    async def save_client_warranty_image(self, user_id: KeyLike, file) -> bool:
+        return await self.redis.set(f"{self.image_prefix}{user_id}", file, ex=timedelta(seconds=self.image_ttl))
 
-    @classmethod
-    async def check_client_warranty_image_exists(cls, user_id: KeyLike) -> int:
-        return await cls.redis.ttl(f"{cls.image_prefix}{user_id}")
+    async def check_client_warranty_image_exists(self, user_id: KeyLike) -> int:
+        return await self.redis.ttl(f"{self.image_prefix}{user_id}")
 
-    @classmethod
-    async def get_client_warranty_image(cls, user_id: KeyLike):
-        return await cls.redis.get(f"{cls.image_prefix}{user_id}")
+    async def get_client_warranty_image(self, user_id: KeyLike):
+        return await self.redis.get(f"{self.image_prefix}{user_id}")
 
-    @classmethod
-    async def clear_client_warranty_image(cls, user_id: KeyLike):
-        return await cls.redis.delete(f"{cls.image_prefix}{user_id}")
+    async def clear_client_warranty_image(self, user_id: KeyLike):
+        return await self.redis.delete(f"{self.image_prefix}{user_id}")
