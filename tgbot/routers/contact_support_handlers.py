@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tgbot.cache.shortcuts import RedisAdapter
 from tgbot.crud import TicketRelatedQueries
 from tgbot.keyboards import get_inline_keyboard_builder
-from tgbot.models import Ticket
 from tgbot.states import ContactSupportState
 from tgbot.constants import CLEAN_PHONE_PATTERN, GET_PHONE_PATTERN, GET_EMAIL_PATTERN, GET_NAME_PATTERN, \
     CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE
