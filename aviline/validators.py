@@ -2,7 +2,6 @@ from django.core.exceptions import ValidationError
 
 
 def product_name_lte_64_bytes(value: str):
-    print(value)
     value = value.encode('utf-8')
     if len(value) > 63:
         raise ValidationError(

@@ -20,6 +20,7 @@ from config import settings
 logging.basicConfig(level=logging.INFO)
 
 
+# IT DOESN'T WORK! NOTE!
 async def main(lp) -> None:
     storage = await lp.run_until_complete(get_redis_or_mem_storage)
 

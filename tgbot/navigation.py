@@ -1,13 +1,10 @@
-__all__ = ("Navigation", "template_from_state")
+__all__ = ("get_navigation", "template_from_state")
 
-import logging
 from typing import Optional, List
 
 from tgbot.states import PurchaseState, ContactSupportState, WarrantyState, TechSupportState
 from aiogram.fsm.state import State
 from tgbot.logging_config.setup_logger import navigation
-
-navigation.setLevel(logging.DEBUG)
 
 
 class Node:
@@ -37,7 +34,7 @@ class Node:
         if self.s is None:
             return None
 
-        if self.s is ContactSupportState.enter_name:
+        if self.s is ContactSupportState.confirm_policy:
             if par == 'purchase':
                 return PurchaseState.product_description
             elif par == 'support':
@@ -46,7 +43,6 @@ class Node:
                 return None
         msg = f"reversing from {self.s}"
         navigation.info(msg=msg)
-        del msg
         return self.prev.s
 
     def __eq__(self, other):
@@ -59,7 +55,7 @@ class Node:
                              f'got {self.__class__} and {other.__class__}')
 
     def __str__(self):
-        return f"StateNode (state={str(self.s) if self.s is not None else None})"
+        return f"StateNode (state={str(self.s) if self.s is not None else str(None)})"
 
 
 def get_navigation() -> Node:
@@ -72,6 +68,7 @@ def get_navigation() -> Node:
     sub_product = Node(PurchaseState.select_sub_product, pre=purchase)
     product_desc = Node(PurchaseState.product_description, pre=purchase)
 
+    warranty_confirm_policy = Node(WarrantyState.confirm_policy, pre=start)
     warranty_describe = Node(WarrantyState.describe_problem, pre=start)
     warranty_where_when = Node(WarrantyState.where_when_buy, pre=warranty_describe)
     warranty_city = Node(WarrantyState.location, pre=warranty_where_when)
@@ -79,19 +76,18 @@ def get_navigation() -> Node:
     warranty_confirm = Node(WarrantyState.confirm_entry, pre=warranty_car)
     warranty_attach = Node(WarrantyState.approval_docs_contact, pre=warranty_confirm)
 
-    enter_name = Node(ContactSupportState.enter_name)
-    product_desc.next = [enter_name]
-    sub_product.next = [enter_name]
-    problem_detail.next = [enter_name]
+    confirm_policy = Node(ContactSupportState.confirm_policy)
+    product_desc.next = [confirm_policy]
+    sub_product.next = [confirm_policy]
+    problem_detail.next = [confirm_policy]
 
+    enter_name = Node(ContactSupportState.enter_name, pre=start)
     enter_contact = Node(ContactSupportState.enter_contact, pre=enter_name)
     enter_message = Node(ContactSupportState.enter_message, pre=enter_contact)
     confirm = Node(ContactSupportState.entry_confirmation, pre=enter_message)
 
     return start
 
-
-Navigation: Node = get_navigation()
 
 template_from_state = {
     None: "start.html",
@@ -100,10 +96,12 @@ template_from_state = {
     TechSupportState.select_product: "products_list.html",
     TechSupportState.product_problems: "product_problems.html",
     TechSupportState.problem_details: "product_problem_solution.html",
+    ContactSupportState.confirm_policy: "privacy_policy.html",
     ContactSupportState.enter_name: "client_enter_name.html",
     ContactSupportState.enter_contact: "client_enter_contact.html",
     ContactSupportState.enter_message: "client_enter_message.html",
     ContactSupportState.entry_confirmation: "client_message_confirm.html",
+    WarrantyState.confirm_policy: 'privacy_policy.html',
     WarrantyState.describe_problem: 'warranty_describe_problem.html',
     WarrantyState.where_when_buy: 'warranty_where_when_buy.html',
     WarrantyState.location: 'warranty_location.html',

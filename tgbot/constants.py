@@ -1,13 +1,6 @@
 from pathlib import Path
 
 
-TG_BOT_DIR = Path(__file__).resolve().parent
-PROJECT_LEVEL_DIR = TG_BOT_DIR.parent
-
-AVILINE_CHAT_ID = -1001948597816
-AVILINE_TECH_CHAT_ID = -1001948880155
-AVILINE_MANAGER_CHAT_ID = -1002074193781
-
 AVAILABLE_SERVICES = {
     'О продукции': 'purchase',
     'Техподдержка': 'support',
@@ -23,6 +16,9 @@ GET_PHONE_PATTERN = r'\d{7,11}'  # 7 to 11 digits
 GET_EMAIL_PATTERN = r'(\w+\.)*\w+@([a-zA-Z]+\.)+[a-zA-Z]{2,}'
 
 CONFIRMATION_MESSAGE = '✅ да'
+CONFIRM_POLICY = '✅ согласиться'
+VERIFY_ENTRY = '✅ всё верно'
+VERIFY_SENDING = '✅ отправить'
 NEGATIVE_MESSAGE = '❌ Нет. У меня остались вопросы'
 
 MEDIA_TYPES = {
@@ -35,4 +31,4 @@ MEDIA_TYPES = {
 
 WARRANTY_CHANGE_CARD = {"🔁 Изменить вложение": "change_warranty_card"}
 WARRANTY_CHANGE_CONTACTS = {"🔁 Изменить контактные данные": "change_client_contact"}
-WARRANTY_CONFIRM_MAIL = {"✅ Отправить сообщение": CONFIRMATION_MESSAGE}
+WARRANTY_CONFIRM_MAIL = {"✅ Отправить сообщение": VERIFY_SENDING}

@@ -1,5 +1,5 @@
 from aiogram import Router, F, Bot
-from aiogram.filters import or_f
+from aiogram.filters import StateFilter
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from jinja2 import TemplateSyntaxError
@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.keyboards import get_inline_keyboard_builder
 from tgbot.states import PurchaseState
-from tgbot.utils import render_template, edit_base_message
+from tgbot.utils import async_render_template, edit_base_message
 from tgbot.crud import ProductRelatedQueries
 from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
 from tgbot.logging_config import database as database_logging
@@ -24,7 +24,7 @@ async def purchase_selected(
 ) -> None:
     data = await refresh_message_data_from_callback_query(callback_query, state, branch=callback_query.data)
     available_products = await ProductRelatedQueries(db_session).get_all_products()
-    text = render_template('products_list.html', data)
+    text = await async_render_template('products_list.html', data)
 
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -36,16 +36,20 @@ async def purchase_selected(
     await state.set_state(PurchaseState.select_product)
 
 
-@router.callback_query(or_f(PurchaseState.select_product, PurchaseState.select_sub_product))
-async def product(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
-    print(f'Ой вэй, что твориться: {callback_query.data = }')
+@router.callback_query(StateFilter(PurchaseState.select_product, PurchaseState.select_sub_product))
+async def product_subproduct_selected(
+        callback_query: CallbackQuery,
+        state: FSMContext,
+        db_session: AsyncSession,
+        bot: Bot,
+) -> None:
     product = callback_query.data
 
     try:
         sub_products = await ProductRelatedQueries(db_session).get_sub_products(product)
+        data = await refresh_message_data_from_callback_query(callback_query, state, product=product)
         if sub_products:
-            data = await refresh_message_data_from_callback_query(callback_query, state, product=callback_query.data)
-            text = render_template('sub_products_list.html', values=data)
+            text = await async_render_template('sub_products_list.html', values=data)
             await edit_base_message(
                 chat_id=data['chat_id'],
                 message_id=data['message_id'],
@@ -59,7 +63,7 @@ async def product(callback_query: CallbackQuery, state: FSMContext, db_session: 
             product_details = await ProductRelatedQueries(db_session).get_product_detail(product)
             data['description'] = product_details.description
             data['attachment'] = product_details.attachment
-            text = render_template('product_description.html', values=data)
+            text = await async_render_template('product_description.html', values=data)
             await edit_base_message(
                 chat_id=data['chat_id'],
                 message_id=data['message_id'],

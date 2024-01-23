@@ -1,15 +1,15 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.constants import AVAILABLE_SERVICES, CONFIRMATION_MESSAGE
+from tgbot.constants import AVAILABLE_SERVICES, VERIFY_ENTRY, CONFIRM_POLICY
 from tgbot.keyboards import get_inline_keyboard_builder
-from tgbot.utils.template_engine import render_template
+from tgbot.utils.template_engine import async_render_template
 from tgbot.crud import ProductRelatedQueries, get_product_problems
-from tgbot.navigation import Navigation, template_from_state
-from tgbot.logging_config import navigation
+from tgbot.navigation import get_navigation, template_from_state
+from tgbot.logging_config import navigation as navigation_logger
 
 
 router = Router()
@@ -20,11 +20,16 @@ async def handle_start(message: Message, state: FSMContext) -> None:
     """/start command handler, clear state, no db_access"""
     await state.clear()
     keyboard = get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True, row_col=(2, 1))
-    text = render_template('start.html')
+    text = await async_render_template('start.html')
     await message.answer(
         text=text,
         reply_markup=keyboard.as_markup(),
     )
+
+
+@router.message(Command("help"))
+async def handle_help(message: Message) -> None:
+    await message.reply(f"Раздел находится в разработке. Приносим извинения")
 
 
 @router.callback_query(F.data == 'back')
@@ -35,9 +40,10 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
     Node tree implementation using dfs with states as Node value and next/prev as parent/child Nodes
     """
     try:
+        navigation = get_navigation()
         current_state = await state.get_state()
         data = await state.get_data()
-        reverse_state = Navigation.find(current_state).reverse_state(par=data.get("branch"))  # find node, then parent
+        reverse_state = navigation.find(current_state).reverse_state(par=data.get("branch"))  # find node, then parent
 
         keyboard = get_inline_keyboard_builder()
         template = template_from_state[reverse_state]
@@ -54,15 +60,21 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
                 row_col=(2, 2),
             )
         elif template == "product_description.html":
+            product_details = await ProductRelatedQueries(db_session=db_session)\
+                .get_product_detail(product_name=data["product"])
+            data['description'] = product_details.description
+            data['attachment'] = product_details.attachment
             keyboard = get_inline_keyboard_builder(
                 support_reachable=True,
             )
 
         elif template == 'warranty_confirm_entry.html':
             keyboard = get_inline_keyboard_builder(
-                iterable=[CONFIRMATION_MESSAGE],
+                iterable=[VERIFY_ENTRY],
                 row_col=(1, 1),
             )
+        elif template == 'privacy_policy.html':
+            keyboard = get_inline_keyboard_builder(iterable=[CONFIRM_POLICY])
 
         if reverse_state is None:
             await state.clear()
@@ -71,11 +83,17 @@ async def move_back(callback_query: CallbackQuery, state: FSMContext, db_session
             await state.set_state(reverse_state)
 
         await callback_query.message.edit_text(
-            text=render_template(template, values=data),
+            text=(await async_render_template(template, values=data)),
             reply_markup=keyboard.as_markup(),
         )
     except Exception as e:
-        msg = f"Backward_reversing. Could not reverse, state: {await state.get_state()}. Error: {e}"
-        navigation.error(msg=msg)
+        msg = f"Backward_reversing. Could not reverse, state: {await state.get_state()}. " \
+              f"Error: {e.__class__.__name__}. {e}"
+        navigation_logger.error(msg=msg)
         await callback_query.answer("Возникла ошибка возврата.\nПожалуйста, перезапустите бота через "
-                                    "/start или свяжитесь с техподдержкой")
+                                    "/start или свяжитесь с техподдержкой по телефону на сайте.")
+        await callback_query.message.edit_text(
+            text=(await async_render_template('start.html')),
+            reply_markup=get_inline_keyboard_builder(AVAILABLE_SERVICES, is_initial=True, row_col=(2, 1)).as_markup(),
+        )
+        await state.clear()

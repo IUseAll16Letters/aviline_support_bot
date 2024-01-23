@@ -19,6 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / "config" / '.env')
 
+DEBUG = int(os.getenv("DEBUG"))
+
 # All keys / tokens
 TG_BOT_TOKEN = os.getenv("BOT_TOKEN")
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -29,7 +31,9 @@ BASE_WEBHOOK_URL = os.getenv("BASE_WEBHOOK_URL")
 WEBHOOK_PATH = os.getenv("WEBHOOK_PATH")
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 
-DEBUG = int(os.getenv("DEBUG"))
+AVILINE_DEBUG_CHAT_ID = int(os.getenv('AVILINE_DEBUG_CHAT_ID'))
+AVILINE_TECH_CHAT_ID = int(os.getenv('AVILINE_TECH_CHAT_ID')) if not DEBUG else AVILINE_DEBUG_CHAT_ID
+AVILINE_MANAGER_CHAT_ID = int(os.getenv('AVILINE_MANAGER_CHAT_ID')) if not DEBUG else AVILINE_DEBUG_CHAT_ID
 
 ALLOWED_HOSTS = []
 ALLOWED_HOSTS.extend(os.getenv("ALLOWED_HOSTS").split(','))
@@ -62,7 +66,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -155,18 +159,10 @@ CACHE = {
     1: {
         "HOST": "127.0.0.1",
         "PORT": 6379,
-        "DBS": {
-            'memstorage': 0,
-            'cache': 1,
-        },
     },
     0: {
         "HOST": os.getenv('REDIS_HOST'),
         "PORT": int(os.getenv("REDIS_PORT")),
-        "DBS": {
-            'memstorage': 0,
-            'cache': 1,
-        },
     },
 }
 
@@ -202,3 +198,4 @@ MAX_WARRANTY_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # Max file size allowed for wa
 LOG_FILE_NAME = 'telegram_bot.log'
 # LOG_FILE_LOCATION = Path('/var') / 'log' / 'tgbot' / LOG_FILE_NAME
 LOG_FILE_LOCATION = BASE_DIR / 'var' / 'log' / 'tgbot' / LOG_FILE_NAME
+LOGGING_FORMATTER = '%(asctime)s %(levelname)s:%(name)s: %(message)s'

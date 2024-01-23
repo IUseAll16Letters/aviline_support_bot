@@ -60,10 +60,12 @@ async def edit_base_message(chat_id: int, message_id: int, text: str, keyboard: 
             text=text,
             reply_markup=keyboard,
         )
-    except TelegramBadRequest:
-        # TODO what is it?!
-        # msg = f''
-        ...
+    except TelegramBadRequest as e:
+        msg = f'Bad request for {chat_id}. Message was not modified. Err = {e}'
+        utils_logger.error(msg=msg)
+    except Exception as e:
+        msg = f'Unknown exception during {edit_base_message.__name__}. Err = {e}'
+        utils_logger.critical(msg=msg)
 
 
 def get_client_message(message: Message) -> Optional[str]:

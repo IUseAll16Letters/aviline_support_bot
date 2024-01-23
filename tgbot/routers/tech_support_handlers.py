@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.states import TechSupportState
 from tgbot.keyboards import get_inline_keyboard_builder
-from tgbot.utils import edit_base_message, render_template
+from tgbot.utils import edit_base_message, async_render_template
 from tgbot.crud import get_product_problems, get_problem_solution, ProductRelatedQueries
 from tgbot.logging_config import database
 from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
@@ -16,7 +16,7 @@ router = Router()
 @router.callback_query(F.data == 'support')
 async def select_product(callback_query: CallbackQuery, state: FSMContext, db_session: AsyncSession, bot: Bot) -> None:
     data = await refresh_message_data_from_callback_query(callback_query, state, branch="support")
-    text = render_template('products_list.html', data)
+    text = await async_render_template('products_list.html', data)
     available_products = await ProductRelatedQueries(db_session).get_all_products()
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -36,7 +36,7 @@ async def product_problems(
 
     problems = await get_product_problems(db_session, callback_query.data)
     data['problems'], data['enumerate'] = problems, enumerate
-    text = render_template('product_problems.html', values=data)
+    text = await async_render_template('product_problems.html', values=data)
     keyboard = get_inline_keyboard_builder(
         [str(i) for i in range(1, len(data['problems']) + 1)],
         support_reachable=True,
@@ -76,7 +76,7 @@ async def problem_solution(
         await callback_query.answer("Продукт, который вы выбрали, был удален.\nПриносим извинения.")
         return
 
-    text = render_template('product_problem_solution.html', values=data)
+    text = await async_render_template('product_problem_solution.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],

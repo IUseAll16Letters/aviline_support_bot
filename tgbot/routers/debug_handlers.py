@@ -15,16 +15,15 @@ async def wasted_query(callback: CallbackQuery, state: FSMContext) -> None:
                      f"at state: {await state.get_state()} | " \
                      f"from_user: {callback.from_user.id} | " \
                      f"template: {callback.message.text[:20]}..."
-    print(f"\033[032;4m{logger_message}\033[0m")
     waster_queries.info(msg=logger_message)
+    await state.clear()
     await callback.answer("Ошибка отсутствия состояния\nПожалуйста нажмите назад или презапустите бота через /start "
                           "или из меню внизу")
-    await state.clear()
 
 
 @router.message()
 async def wasted_message(message: Message, state: FSMContext) -> None:
     logger_message = f"wasted message text: {message.text}, " \
                      f"at state: {await state.get_state()}, " \
-                     f"from_user: {message.from_user.id}"
-    print(f"\033[034;4m{logger_message}\033[0m")
+                     f"from_user: {message.from_user.id} in chat {message.chat.id}"
+    waster_queries.debug(msg=logger_message)

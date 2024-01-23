@@ -19,8 +19,9 @@ def test_reverse():
         (TechSupportState.select_product, None, None),
         (PurchaseState.product_description, PurchaseState.select_product, None),
         (TechSupportState.product_problems, TechSupportState.select_product, None),
-        (ContactSupportState.enter_name, TechSupportState.product_problems, "support"),
-        (ContactSupportState.enter_name, PurchaseState.product_description, "purchase"),
+        (ContactSupportState.confirm_policy, TechSupportState.product_problems, "support"),
+        (ContactSupportState.confirm_policy, PurchaseState.product_description, "purchase"),
+        (ContactSupportState.enter_name, ContactSupportState.confirm_policy, None),
         (ContactSupportState.entry_confirmation, ContactSupportState.enter_message, None),
     ]
 

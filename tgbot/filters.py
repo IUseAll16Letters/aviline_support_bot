@@ -1,13 +1,14 @@
 __all__ = ("AvilineSupportChatFilter", )
 
+from typing import Iterable
 
-from aiogram.filters import Filter
+from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
 
-class AvilineSupportChatFilter(Filter):
-    def __init__(self, chats: set, check_is_reply: bool = False) -> None:
-        self._chats = chats
+class AvilineSupportChatFilter(BaseFilter):
+    def __init__(self, chats: Iterable, check_is_reply: bool = False) -> None:
+        self._chats = set(chats)
         self._reply = check_is_reply
 
     async def __call__(self, message: Message) -> bool:

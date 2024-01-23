@@ -109,11 +109,12 @@ class ProductProblem(CreateUpdateProxy):
 
 
 class Ticket(CreateUpdateProxy):
-    customer = models.PositiveIntegerField(editable=False)
+    customer = models.PositiveBigIntegerField(editable=False)
     question = models.TextField(
         blank=False,
         null=False,
     )
+    telegram_message_id = models.BigIntegerField(null=True)
 
     is_solved = models.BooleanField(default=False)
 

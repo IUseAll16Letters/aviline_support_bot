@@ -8,21 +8,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tgbot.cache.shortcuts import RedisAdapter
 from tgbot.crud import TicketRelatedQueries
 from tgbot.keyboards import get_inline_keyboard_builder
-from tgbot.models import Ticket
 from tgbot.states import ContactSupportState
 from tgbot.constants import CLEAN_PHONE_PATTERN, GET_PHONE_PATTERN, GET_EMAIL_PATTERN, GET_NAME_PATTERN, \
-    CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE, AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID
-from tgbot.utils import render_template, get_client_message, parse_message_media, edit_base_message
+    CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE
+from tgbot.utils import async_render_template, get_client_message, parse_message_media, edit_base_message
 from tgbot.logging_config import handlers_logger
 from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
-from tgbot.filters import AvilineSupportChatFilter
+from config.settings import AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID
 
 router = Router()
 
 
 @router.callback_query(F.data == 'contact_support')
-async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
-    minutes, seconds = await RedisAdapter.check_lock_ttl(user_id=callback_query.from_user.id)
+async def user_accept_policy(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+    minutes, seconds = await RedisAdapter().check_lock_ttl(user_id=callback_query.from_user.id)
 
     if minutes not in (-2, -1):
         await callback_query.answer(
@@ -32,7 +31,21 @@ async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot
         return
 
     data = await refresh_message_data_from_callback_query(callback_query, state)
-    text = render_template('client_enter_name.html', values=data)
+    text = await async_render_template('privacy_policy.html', values=data)
+    await edit_base_message(
+        chat_id=data['chat_id'],
+        message_id=data['message_id'],
+        text=text,
+        keyboard=get_inline_keyboard_builder(iterable=[CONFIRMATION_MESSAGE]),
+        bot=bot,
+    )
+    await state.set_state(ContactSupportState.confirm_policy)
+
+
+@router.callback_query(F.data == CONFIRMATION_MESSAGE, ContactSupportState.confirm_policy)
+async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+    data = await refresh_message_data_from_callback_query(callback_query, state)
+    text = await async_render_template('client_enter_name.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -44,13 +57,13 @@ async def user_enters_name(callback_query: CallbackQuery, state: FSMContext, bot
 
 
 @router.message(F.text.regexp(GET_NAME_PATTERN), ContactSupportState.enter_name)
-async def user_enters_contact(message: Message, state: FSMContext, bot: Bot) -> None:
+async def user_sent_valid_name(message: Message, state: FSMContext, bot: Bot) -> None:
     """Client must enter valid contact (email/phone)
     state before: Contact -> enter_name
     state after: Contact -> enter_name -> enter_contact
     after message input - it must be removed in order to save client's chat space and convenience"""
     data = await state.update_data({"username": message.text})
-    text = render_template('client_enter_contact.html', values=data)
+    text = await async_render_template('client_enter_contact.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -85,13 +98,12 @@ async def user_sent_bad_name(message: Message, state: FSMContext, bot: Bot) -> N
     F.text.func(lambda s: re.search(GET_EMAIL_PATTERN, s.strip()) is not None),
 )
 async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot) -> None:
-    """Client must enter valid contact (email/phone)
-    state before: Contact -> enter_name -> enter_contact
-    state after: Contact -> enter_name -> enter_contact -> enter_message
     """
-    await state.update_data({'user_contact': message.text})
-    data = await state.get_data()
-    text = render_template('client_enter_message.html', values=data)
+    Client entered valid contact (email/phone). Must match regexps from constants.py package.
+    State after validation = enter_message / add media
+    """
+    data = await state.update_data({'user_contact': message.text})
+    text = await async_render_template('client_enter_message.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -105,8 +117,12 @@ async def user_sent_valid_contact(message: Message, state: FSMContext, bot: Bot)
 
 @router.message(ContactSupportState.enter_contact)
 async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bot) -> None:
-    data = await state.update_data({'user_contact': message.text})
-    text = render_template('client_bad_contact.html', values=data)
+    """
+    User send the contact that doesn't pass filter from user_sent_valid_contact func. Doesn't meet regexps.
+    """
+    data = await state.get_data()
+    data['user_contact'] = message.text
+    text = await async_render_template('client_bad_contact.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -119,9 +135,8 @@ async def user_sent_invalid_contact(message: Message, state: FSMContext, bot: Bo
 
 @router.message(ContactSupportState.enter_message)
 async def user_sent_message_or_media(message: Message, state: FSMContext, bot: Bot) -> None:
-    """Confirmation of clients input data
-        state before: Contact -> enter_name -> enter_contact -> enter_message
-        state after: Contact -> enter_name -> enter_contact -> enter_message -> entry_confirmation
+    """
+    Parse user message. Must be enter_message_state.
     """
     data = await state.get_data()
 
@@ -142,7 +157,7 @@ async def user_sent_message_or_media(message: Message, state: FSMContext, bot: B
     await state.update_data(data)
 
     try:
-        text = render_template('client_message_confirm.html', values=data)
+        text = await async_render_template('client_message_confirm.html', values=data)
 
         if data['user_message'] is None:
             kb = get_inline_keyboard_builder()
@@ -162,7 +177,7 @@ async def user_sent_message_or_media(message: Message, state: FSMContext, bot: B
         data['err'] = 'Возникла ошибка при отправке сообщения. ' \
                       'Пожалуйста вернитесь на шаг назад и повторите отправку данных заново'
 
-        text = render_template('client_message_confirm.html', values=data)
+        text = await async_render_template('client_message_confirm.html', values=data)
         kb = get_inline_keyboard_builder()
         await edit_base_message(
             chat_id=data['chat_id'],
@@ -183,15 +198,9 @@ async def user_confirmed_message(
     data = await state.get_data()
     data['user_telegram_id'] = callback_query.from_user.id
 
-    user_message = data['user_message']
-    ticket: Ticket = await TicketRelatedQueries(db_session).create_ticket(
-        question=user_message,
-        user_telegram_id=data['user_telegram_id'],
-    )
     media = data.get('user_media')
     aviline_chat_id = AVILINE_MANAGER_CHAT_ID if data['branch'] == 'purchase' else AVILINE_TECH_CHAT_ID
 
-    ticket_related_messages = []
     if media:
         m, a, d = [], [], []
         for i in media:
@@ -204,30 +213,23 @@ async def user_confirmed_message(
                 d.append(InputMediaDocument(media=file_id))
 
         if m:
-            ticket_related_messages.extend(await bot.send_media_group(chat_id=aviline_chat_id, media=m))
-
+            await bot.send_media_group(chat_id=aviline_chat_id, media=m)
         if d:
-            ticket_related_messages.extend(await bot.send_media_group(chat_id=aviline_chat_id, media=d))
-
+            await bot.send_media_group(chat_id=aviline_chat_id, media=d)
         if a:
-            ticket_related_messages.extend(await bot.send_media_group(chat_id=aviline_chat_id, media=a))
+            await bot.send_media_group(chat_id=aviline_chat_id, media=a)
 
-        del m, a, d
-
-        await TicketRelatedQueries(db_session).create_user_media_attached(
-            media=media,
-            ticket_id=ticket.id,
-        )
-
-    ticket_related_messages.append(await bot.send_message(chat_id=aviline_chat_id, text=user_message))
-
-    await TicketRelatedQueries(db_session).create_ticket_message(
-        messages=ticket_related_messages,
-        ticket_id=ticket.id,
+    client_message_full_render = await async_render_template('support_client_message_with_contacts.html', values=data)
+    message_created = await bot.send_message(chat_id=aviline_chat_id, text=client_message_full_render)
+    user_message_text = data['user_message']
+    await TicketRelatedQueries(db_session).create_ticket(
+        question=user_message_text,
+        user_telegram_id=data['user_telegram_id'],
+        related_message_telegram_id=message_created.message_id,
     )
-
     await db_session.commit()
-    text = render_template('message_sent_success.html', values=data)
+
+    text = await async_render_template('message_sent_success.html', values=data)
     await edit_base_message(
         chat_id=data['chat_id'],
         message_id=data['message_id'],
@@ -236,45 +238,11 @@ async def user_confirmed_message(
         bot=bot,
     )
     await state.clear()
-    await RedisAdapter.set_lock(user_id=callback_query.from_user.id)
-
-
-@router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}, check_is_reply=True))
-async def reply_in_aviline_chat(message: Message, db_session: AsyncSession, bot: Bot) -> None:
-    quoted_message = message.reply_to_message.message_id
-    ticket: Ticket = await TicketRelatedQueries(db_session).get_ticket_data_from_message(message_id=quoted_message)
-
-    if ticket is None:
-        pass
-    else:
-        values = {"question": ticket.question, "answer": message.text}
-        text = render_template('reply_client_question.html', values=values)
-        client_answer_keyboard = get_inline_keyboard_builder(
-            is_initial=True,
-            iterable=[CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE],
-            row_col=(2, 1),
-        )
-        response = await bot.send_message(
-            chat_id=ticket.customer,
-            text=text,
-            reply_markup=client_answer_keyboard.as_markup(),
-        )
-
-        if response:
-            await TicketRelatedQueries(db_session).close_ticket(ticket_id=ticket.id)
-            await db_session.commit()
-
-        del values, client_answer_keyboard, text, response
-    del ticket, quoted_message
-
-
-@router.message(AvilineSupportChatFilter(chats={AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID}))
-async def other_trash_talk(message: Message) -> None:
-    ...
+    await RedisAdapter().set_lock(user_id=callback_query.from_user.id)
 
 
 @router.callback_query(F.data.in_({CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE}))
-async def client_replied(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
+async def client_replied(callback_query: CallbackQuery, bot: Bot) -> None:
     if callback_query.data == NEGATIVE_MESSAGE:
         phone = "8-800-555-09-20"
         text = f"Пожалуйста свяжитесь с нашей техподдержкой по телефону: {phone}"
