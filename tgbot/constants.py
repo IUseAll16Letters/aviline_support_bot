@@ -1,15 +1,6 @@
 from pathlib import Path
 
 
-TG_BOT_DIR = Path(__file__).resolve().parent
-PROJECT_LEVEL_DIR = TG_BOT_DIR.parent
-
-AVILINE_DEBUG_CHAT_ID = -1001948597816
-# AVILINE_TECH_CHAT_ID = AVILINE_DEBUG_CHAT_ID
-# AVILINE_MANAGER_CHAT_ID = AVILINE_DEBUG_CHAT_ID
-AVILINE_TECH_CHAT_ID = -1001948880155
-AVILINE_MANAGER_CHAT_ID = -1002074193781
-
 AVAILABLE_SERVICES = {
     'О продукции': 'purchase',
     'Техподдержка': 'support',

@@ -46,8 +46,7 @@ class TicketRelatedQueries:
             })
 
         stmt = insert(TicketMedia).values(medias).returning(TicketMedia.id)
-        res = await self.db_session.execute(stmt)
-        return res
+        await self.db_session.execute(stmt)
 
     async def create_ticket_message(self, messages: List[Message], ticket_id: int) -> None:
         """Attach text to ticket if it exists"""
@@ -58,8 +57,7 @@ class TicketRelatedQueries:
             } for message in messages
         ]
         stmt = insert(TicketMessage).values(messages).returning(TicketMessage.id)
-        res = await self.db_session.execute(stmt)
-        return res
+        await self.db_session.execute(stmt)
 
     async def get_ticket_by_reply_message_id(self, replied_message_id: int):
         """When REPLY in any of AVILINE chat - get client to reply based on message id"""

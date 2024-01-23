@@ -2,11 +2,12 @@ import asyncio
 from asyncio import CancelledError
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.redis import RedisStorage
 
 from tgbot.utils import polling_on_startup, polling_on_shutdown
 from tgbot.routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers, \
     warranty_handlers, debug_handlers, aviline_admin_chats
-from tgbot.middleware import DbSessionMiddleware
+from tgbot.middleware import DbSessionMiddleware, ThrottlingMiddleware
 from tgbot.database import get_connection_pool
 from tgbot.cache.connection import get_redis_or_mem_storage
 
@@ -36,6 +37,10 @@ async def main() -> None:
 
     dp.message.middleware(DbSessionMiddleware(get_connection_pool()))
     dp.callback_query.middleware(DbSessionMiddleware(get_connection_pool()))
+
+    if isinstance(storage, RedisStorage):
+        dp.callback_query.middleware(ThrottlingMiddleware(redis_storage=storage))
+        dp.message.middleware(ThrottlingMiddleware(redis_storage=storage))
 
     try:
         await dp.start_polling(bot, polling_timeout=30)

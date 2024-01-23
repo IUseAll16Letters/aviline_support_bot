@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +25,11 @@ async def handle_start(message: Message, state: FSMContext) -> None:
         text=text,
         reply_markup=keyboard.as_markup(),
     )
+
+
+@router.message(Command("help"))
+async def handle_help(message: Message) -> None:
+    await message.reply(f"Раздел находится в разработке. Приносим извинения")
 
 
 @router.callback_query(F.data == 'back')
