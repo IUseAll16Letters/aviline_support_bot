@@ -6,9 +6,6 @@ from config.settings import DATABASES, DEBUG
 
 
 def get_connection_pool() -> async_sessionmaker:
-    """ASync connection pool
-    :return session pool, to get conn from
-    """
     database_settings = DATABASES['default']
     if DEBUG:
         sqlalchemy_database_path = str(database_settings["NAME"])

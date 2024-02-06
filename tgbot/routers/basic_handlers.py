@@ -29,7 +29,8 @@ async def handle_start(message: Message, state: FSMContext) -> None:
 
 @router.message(Command("help"))
 async def handle_help(message: Message) -> None:
-    await message.reply(f"Раздел находится в разработке. Приносим извинения")
+    await message.reply("Раздел находится в разработке. Приносим извинения. Пожалуйста, воспользуйтесь командой /start"
+                        "для получения информации о боте.")
 
 
 @router.callback_query(F.data == 'back')

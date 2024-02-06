@@ -15,16 +15,16 @@ async def get_redis_storage(image_storage_db: int = 0):
     host = settings.CACHE[settings.DEBUG]['HOST']
     port = settings.CACHE[settings.DEBUG]['PORT']
     db = image_storage_db
-    redis = Redis(host=host, port=port, db=db)
+    redis = Redis(host=host, port=port, db=db, socket_timeout=3.0, socket_connect_timeout=5.0)
     for i in range(1, 4):
         try:
             await redis.ping()
-            msg = f'Redis successfully connected to: redis:///{host}:{port}/{db}, from {i} attempt'
+            msg = f'Redis successfully connected to: redis://{host}:{port}/{db}, from {i} attempt'
             print(msg)
             redis_logger.info(msg=msg)
             return redis
         except ConnectionError as e:
-            msg = f'Cant connect to redis storage at redis:///{host}:{port}/{db}, from {i} attempt. ERR: {e}'
+            msg = f'Cant connect to redis storage at redis://{host}:{port}/{db}, from {i} attempt. ERR: {e}'
             redis_logger.error(msg=msg)
         except Exception as e:
             redis_logger.critical(msg=f"Unknown exception handled: {e}")
@@ -43,4 +43,5 @@ async def get_redis_or_mem_storage() -> Union[MemoryStorage, RedisStorage]:
             state_ttl=settings.MEMSTORAGE_DATA_TTL,
             data_ttl=settings.MEMSTORAGE_STATE_TTL,
         )
+        # RedisStorage.from_url("")
     return storage

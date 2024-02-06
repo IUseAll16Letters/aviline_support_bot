@@ -2,6 +2,7 @@ import asyncio
 from asyncio import CancelledError
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage
 
 from tgbot.utils import polling_on_startup, polling_on_shutdown
@@ -9,7 +10,7 @@ from tgbot.routers import basic_handlers, contact_support_handlers, purchase_han
     warranty_handlers, debug_handlers, aviline_admin_chats
 from tgbot.middleware import DbSessionMiddleware, ThrottlingMiddleware
 from tgbot.database import get_connection_pool
-from tgbot.cache.connection import get_redis_or_mem_storage
+# from tgbot.cache.connection import get_redis_or_mem_storage
 
 from config import settings
 
@@ -18,7 +19,9 @@ async def main() -> None:
     bot = Bot(token=settings.TG_BOT_TOKEN, parse_mode='html')
     await bot.delete_webhook(drop_pending_updates=True)
 
-    storage = await get_redis_or_mem_storage()
+    # storage = await get_redis_or_mem_storage()
+    # this is a temp fork to prevent the hanging (which is probably called by template render + redis storage)
+    storage = MemoryStorage()
 
     dp = Dispatcher(storage=storage)
 
@@ -35,8 +38,10 @@ async def main() -> None:
     dp.startup.register(polling_on_startup)
     dp.shutdown.register(polling_on_shutdown)
 
-    dp.message.middleware(DbSessionMiddleware(get_connection_pool()))
-    dp.callback_query.middleware(DbSessionMiddleware(get_connection_pool()))
+    session_pool = get_connection_pool()
+
+    dp.message.middleware(DbSessionMiddleware(session_pool=session_pool))
+    dp.callback_query.middleware(DbSessionMiddleware(session_pool=session_pool))
 
     if isinstance(storage, RedisStorage):
         dp.callback_query.middleware(ThrottlingMiddleware(redis_storage=storage))

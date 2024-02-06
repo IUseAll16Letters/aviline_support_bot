@@ -201,6 +201,18 @@ async def user_confirmed_message(
     media = data.get('user_media')
     aviline_chat_id = AVILINE_MANAGER_CHAT_ID if data['branch'] == 'purchase' else AVILINE_TECH_CHAT_ID
 
+    client_message_full_render = await async_render_template('support_client_message_with_contacts.html', values=data)
+    message_created = await bot.send_message(chat_id=aviline_chat_id, text=client_message_full_render)
+
+    user_message_text = data['user_message']
+    await TicketRelatedQueries(db_session).create_ticket(
+        question=user_message_text,
+        user_telegram_id=data['user_telegram_id'],
+        related_message_telegram_id=message_created.message_id,
+    )
+    await db_session.commit()
+    await db_session.close()
+
     if media:
         m, a, d = [], [], []
         for i in media:
@@ -218,16 +230,6 @@ async def user_confirmed_message(
             await bot.send_media_group(chat_id=aviline_chat_id, media=d)
         if a:
             await bot.send_media_group(chat_id=aviline_chat_id, media=a)
-
-    client_message_full_render = await async_render_template('support_client_message_with_contacts.html', values=data)
-    message_created = await bot.send_message(chat_id=aviline_chat_id, text=client_message_full_render)
-    user_message_text = data['user_message']
-    await TicketRelatedQueries(db_session).create_ticket(
-        question=user_message_text,
-        user_telegram_id=data['user_telegram_id'],
-        related_message_telegram_id=message_created.message_id,
-    )
-    await db_session.commit()
 
     text = await async_render_template('message_sent_success.html', values=data)
     await edit_base_message(
