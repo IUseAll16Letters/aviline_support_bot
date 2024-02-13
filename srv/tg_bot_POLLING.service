@@ -1,0 +1,14 @@
+[Unit]
+Description=telebot daemon
+After=network.target
+
+[Service]
+User=telebot
+Group=telebot
+WorkingDirectory=/home/telebot/aviline_support_bot
+EnvironmentFile=/home/telebot/aviline_support_bot/config/.env
+ExecStart=/home/telebot/aviline_support_bot/venv/bin/python3 /home/telebot/aviline_support_bot/bot.py
+ExecStop=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

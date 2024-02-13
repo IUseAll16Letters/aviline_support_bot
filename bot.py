@@ -1,34 +1,59 @@
 import asyncio
-import logging
+from asyncio import CancelledError
 
 from aiogram import Bot, Dispatcher
-from configs import TOKEN
-from utils.base import on_startup, on_shutdown
-from handlers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 
+from tgbot.utils import polling_on_startup, polling_on_shutdown
+from tgbot.routers import basic_handlers, contact_support_handlers, purchase_handlers, tech_support_handlers, \
+    warranty_handlers, debug_handlers, aviline_admin_chats
+from tgbot.middleware import DbSessionMiddleware, ThrottlingMiddleware
+from tgbot.database import get_connection_pool
+# from tgbot.cache.connection import get_redis_or_mem_storage
 
-logging.basicConfig(level=logging.INFO)
+from config import settings
 
 
 async def main() -> None:
-    bot = Bot(token=TOKEN, parse_mode='html')
-    dp = Dispatcher()
+    bot = Bot(token=settings.TG_BOT_TOKEN, parse_mode='html')
+    await bot.delete_webhook(drop_pending_updates=True)
+
+    # storage = await get_redis_or_mem_storage()
+    # this is a temp fork to prevent the hanging (which is probably called by template render + redis storage)
+    storage = MemoryStorage()
+
+    dp = Dispatcher(storage=storage)
+
     dp.include_routers(
+        basic_handlers.router,
+        aviline_admin_chats.router,
         tech_support_handlers.router,
         purchase_handlers.router,
         contact_support_handlers.router,
-        basic_handlers.router,
+        warranty_handlers.router,
+        debug_handlers.router,
     )
 
-    dp.startup.register(on_startup)
-    dp.shutdown.register(on_shutdown)
+    dp.startup.register(polling_on_startup)
+    dp.shutdown.register(polling_on_shutdown)
 
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+    session_pool = get_connection_pool()
+
+    dp.message.middleware(DbSessionMiddleware(session_pool=session_pool))
+    dp.callback_query.middleware(DbSessionMiddleware(session_pool=session_pool))
+
+    if isinstance(storage, RedisStorage):
+        dp.callback_query.middleware(ThrottlingMiddleware(redis_storage=storage))
+        dp.message.middleware(ThrottlingMiddleware(redis_storage=storage))
+
+    try:
+        await dp.start_polling(bot, polling_timeout=30)
+    except CancelledError:
+        ...
+    finally:
+        await dp.storage.close()
 
 
 if __name__ == '__main__':
-    try:
-        asyncio.run(main())
-    except (KeyboardInterrupt, SystemExit):
-        print('Bot stop')
+    asyncio.run(main())

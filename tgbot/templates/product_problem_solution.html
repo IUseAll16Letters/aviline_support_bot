@@ -1,0 +1,4 @@
+😕 Возникшая проблема: {{ problem }}
+😎 Известные решения:{% for solution in solutions %}
+{{ solution }}{% endfor %}
+{% if attachments %} 💾 Доступные файлы: {{ attachments }} {% endif %}

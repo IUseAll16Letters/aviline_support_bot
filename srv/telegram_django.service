@@ -1,0 +1,18 @@
+[Unit]
+Description=Gunicorn daemon
+After=network.target
+
+[Service]
+User=telebot
+Group=telebot
+WorkingDirectory=/home/telebot/aviline_support_bot
+EnvironmentFile=/home/telebot/aviline_support_bot/config/.env
+ExecStart=/home/telebot/aviline_support_bot/venv/bin/gunicorn \
+--access-logfile /home/telebot/aviline_support_bot/var/log/gunicorn/access.log \
+--error-logfile /home/telebot/aviline_support_bot/var/log/gunicorn/error.log \
+--log-level DEBUG \
+--bind localhost:8822 config.wsgi:application
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target
