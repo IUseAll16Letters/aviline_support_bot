@@ -3,17 +3,18 @@ import datetime
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
+from redis.asyncio import Redis
 
-from tgbot.cache import RedisAdapter
-from tgbot.constants import WARRANTY_CHANGE_CARD, WARRANTY_CHANGE_CONTACTS, WARRANTY_CONFIRM_MAIL, \
+from ..cache import RedisFacade
+from ..constants import WARRANTY_CHANGE_CARD, WARRANTY_CHANGE_CONTACTS, WARRANTY_CONFIRM_MAIL, \
     VERIFY_ENTRY, VERIFY_SENDING, CONFIRM_POLICY
 from config.settings import SMTP_MAIL_PARAMS
-from tgbot.keyboards import get_inline_keyboard_builder
-from tgbot.states import WarrantyState
-from tgbot.utils import async_render_template, edit_base_message, get_client_message, \
+from ..keyboards import get_inline_keyboard_builder
+from ..states import WarrantyState
+from ..utils import async_render_template, edit_base_message, get_client_message, \
     send_email_to_aviline, download_file_from_telegram_file_id, get_allowed_media_id
-from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
-from tgbot.logging_config import mailing
+from ..utils.shortcuts import refresh_message_data_from_callback_query
+from ..logging_config import mailing
 
 
 router = Router()
@@ -116,12 +117,12 @@ async def confirm_warranty_entry(message: Message, state: FSMContext, bot: Bot):
 
 
 @router.callback_query(F.data == VERIFY_ENTRY, WarrantyState.confirm_entry)
-async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
+async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FSMContext, bot: Bot, cache: Redis):
     """confirmed input data correct, now enter contact + warranty card"""
     await state.set_state(WarrantyState.approval_docs_contact)
     data = await state.get_data()
 
-    img_ttl = await RedisAdapter().check_client_warranty_image_exists(user_id=callback_query.from_user.id)
+    img_ttl = await RedisFacade(cache).check_client_warranty_image_exists(user_id=callback_query.from_user.id)
     user_message = data.get('user_warranty_message')
 
     keyboard_buttons = {}
@@ -148,7 +149,7 @@ async def enter_contact_warranty_coupon(callback_query: CallbackQuery, state: FS
 
 
 @router.message(WarrantyState.approval_docs_contact)
-async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
+async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot, cache: Redis):
     """enters his contacts and approval contact after callback"""
     data = await state.get_data()
 
@@ -165,7 +166,7 @@ async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
     if data.get('user_warranty_message'):
         keyboard_buttons.update(WARRANTY_CHANGE_CONTACTS)
 
-    file_saved_to_redis = await RedisAdapter().check_client_warranty_image_exists(message.from_user.id)
+    file_saved_to_redis = await RedisFacade(cache).check_client_warranty_image_exists(message.from_user.id)
     if not data.get('user_warranty_card', False) or file_saved_to_redis < 0:
         file_id, ext = get_allowed_media_id(message)
         if file_id == -1:
@@ -173,7 +174,7 @@ async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
                           "Вы можете уменьшить качество или обрезать несущественную информацию с изображения."
         elif file_id != -2:
             user_warranty_card = await download_file_from_telegram_file_id(bot_instance=bot, telegram_file_id=file_id)
-            await RedisAdapter().save_client_warranty_image(user_id=message.from_user.id, file=user_warranty_card)
+            await RedisFacade(cache).save_client_warranty_image(user_id=message.from_user.id, file=user_warranty_card)
             data['user_warranty_card'] = ext
             keyboard_buttons.update(WARRANTY_CHANGE_CARD)
     else:
@@ -200,12 +201,12 @@ async def client_need_to_confirm(message: Message, state: FSMContext, bot: Bot):
     F.data.in_(("change_warranty_card", "change_client_contact")),
     WarrantyState.approval_docs_contact,
 )
-async def clear_field(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
+async def clear_field(callback_query: CallbackQuery, state: FSMContext, bot: Bot, cache: Redis):
     data = await state.get_data()
 
     if callback_query.data == "change_warranty_card":
         try:
-            await RedisAdapter().clear_client_warranty_image(user_id=callback_query.from_user.id)
+            await RedisFacade(cache).clear_client_warranty_image(user_id=callback_query.from_user.id)
         except Exception as e:
             msg = f"Could not delete the file for user: {callback_query.from_user.id}. Error: {e}"
             mailing.error(msg=msg)
@@ -232,7 +233,7 @@ async def clear_field(callback_query: CallbackQuery, state: FSMContext, bot: Bot
 
 
 @router.callback_query(F.data == VERIFY_SENDING, WarrantyState.approval_docs_contact)
-async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
+async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot, cache: Redis):
     data = await state.get_data()
     await edit_base_message(
         chat_id=data['chat_id'],
@@ -242,7 +243,7 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
         bot=bot,
     )
 
-    file = await RedisAdapter().get_client_warranty_image(callback_query.from_user.id)
+    file = await RedisFacade(cache).get_client_warranty_image(callback_query.from_user.id)
 
     if file:
         text = await async_render_template("warranty_email_template.html", values=data)
@@ -256,7 +257,7 @@ async def send_mail(callback_query: CallbackQuery, state: FSMContext, bot: Bot):
             warranty_basename=base_name,
         )
         try:
-            await RedisAdapter().clear_client_warranty_image(user_id=callback_query.from_user.id)
+            await RedisFacade(cache).clear_client_warranty_image(user_id=callback_query.from_user.id)
         except Exception as e:
             msg = f"Could not delete the file for user: {callback_query.from_user.id}. Error: {e}"
             mailing.error(msg=msg)

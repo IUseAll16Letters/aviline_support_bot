@@ -3,25 +3,26 @@ import re
 from aiogram import Router, F, Bot
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, InputMediaPhoto, InputMediaDocument, InputMediaVideo, InputMediaAudio
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.cache.shortcuts import RedisAdapter
-from tgbot.crud import TicketRelatedQueries
-from tgbot.keyboards import get_inline_keyboard_builder
-from tgbot.states import ContactSupportState
-from tgbot.constants import CLEAN_PHONE_PATTERN, GET_PHONE_PATTERN, GET_EMAIL_PATTERN, GET_NAME_PATTERN, \
+from ..cache.shortcuts import RedisFacade
+from ..crud import TicketRelatedQueries
+from ..keyboards import get_inline_keyboard_builder
+from ..states import ContactSupportState
+from ..constants import CLEAN_PHONE_PATTERN, GET_PHONE_PATTERN, GET_EMAIL_PATTERN, GET_NAME_PATTERN, \
     CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE
-from tgbot.utils import async_render_template, get_client_message, parse_message_media, edit_base_message
-from tgbot.logging_config import handlers_logger
-from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
+from ..utils import async_render_template, get_client_message, parse_message_media, edit_base_message
+from ..logging_config import handlers_logger
+from ..utils.shortcuts import refresh_message_data_from_callback_query
 from config.settings import AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID
 
 router = Router()
 
 
 @router.callback_query(F.data == 'contact_support')
-async def user_accept_policy(callback_query: CallbackQuery, state: FSMContext, bot: Bot) -> None:
-    minutes, seconds = await RedisAdapter().check_lock_ttl(user_id=callback_query.from_user.id)
+async def user_accept_policy(callback_query: CallbackQuery, state: FSMContext, bot: Bot, cache: Redis) -> None:
+    minutes, seconds = await (RedisFacade(cache)).check_lock_ttl(user_id=callback_query.from_user.id)
 
     if minutes not in (-2, -1):
         await callback_query.answer(
@@ -240,7 +241,7 @@ async def user_confirmed_message(
         bot=bot,
     )
     await state.clear()
-    await RedisAdapter().set_lock(user_id=callback_query.from_user.id)
+    await RedisFacade().set_lock(user_id=callback_query.from_user.id)
 
 
 @router.callback_query(F.data.in_({CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE}))

@@ -2,9 +2,10 @@ __all__ = ("get_navigation", "template_from_state")
 
 from typing import Optional, List
 
-from tgbot.states import PurchaseState, ContactSupportState, WarrantyState, TechSupportState
 from aiogram.fsm.state import State
-from tgbot.logging_config.setup_logger import navigation
+
+from .states import PurchaseState, ContactSupportState, WarrantyState, TechSupportState
+from .logging_config.setup_logger import navigation
 
 
 class Node:

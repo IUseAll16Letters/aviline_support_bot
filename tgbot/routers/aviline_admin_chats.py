@@ -8,9 +8,9 @@ from ..models import Ticket
 from ..crud import TicketRelatedQueries
 from ..utils.template_engine import async_render_template
 from ..keyboards import get_inline_keyboard_builder
-from config.settings import AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID
 from ..constants import CONFIRMATION_MESSAGE, NEGATIVE_MESSAGE
 from ..logging_config import handlers_logger
+from config.settings import AVILINE_TECH_CHAT_ID, AVILINE_MANAGER_CHAT_ID
 
 router = Router()
 

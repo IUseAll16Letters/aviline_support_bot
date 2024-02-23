@@ -5,12 +5,12 @@ from aiogram.fsm.context import FSMContext
 from jinja2 import TemplateSyntaxError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.keyboards import get_inline_keyboard_builder
-from tgbot.states import PurchaseState
-from tgbot.utils import async_render_template, edit_base_message
-from tgbot.crud import ProductRelatedQueries
-from tgbot.utils.shortcuts import refresh_message_data_from_callback_query
-from tgbot.logging_config import database as database_logging
+from ..keyboards import get_inline_keyboard_builder
+from ..states import PurchaseState
+from ..utils import async_render_template, edit_base_message
+from ..crud import ProductRelatedQueries
+from ..utils.shortcuts import refresh_message_data_from_callback_query
+from ..logging_config import database as database_logging
 
 router = Router()
 

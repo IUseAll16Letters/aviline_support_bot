@@ -4,12 +4,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from tgbot.constants import AVAILABLE_SERVICES, VERIFY_ENTRY, CONFIRM_POLICY
-from tgbot.keyboards import get_inline_keyboard_builder
-from tgbot.utils.template_engine import async_render_template
-from tgbot.crud import ProductRelatedQueries, get_product_problems
-from tgbot.navigation import get_navigation, template_from_state
-from tgbot.logging_config import navigation as navigation_logger
+from ..constants import AVAILABLE_SERVICES, VERIFY_ENTRY, CONFIRM_POLICY
+from ..keyboards import get_inline_keyboard_builder
+from ..utils.template_engine import async_render_template
+from ..crud import ProductRelatedQueries, get_product_problems
+from ..navigation import get_navigation, template_from_state
+from ..logging_config import navigation as navigation_logger
 
 
 router = Router()

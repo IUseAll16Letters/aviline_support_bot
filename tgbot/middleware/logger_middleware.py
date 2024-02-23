@@ -1,8 +1,9 @@
-from tgbot.logging_config import middleware_debug
 from typing import Callable, Dict, Any
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
+
+from ..logging_config import middleware_debug
 
 
 class LoggerMiddleware(BaseMiddleware):

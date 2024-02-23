@@ -8,7 +8,7 @@ from redis.asyncio.client import Redis
 from redis.exceptions import ConnectionError
 
 from config import settings
-from tgbot.logging_config import redis_logger
+from ..logging_config import redis_logger
 
 
 async def get_redis_storage(image_storage_db: int = 0):
@@ -43,5 +43,4 @@ async def get_redis_or_mem_storage() -> Union[MemoryStorage, RedisStorage]:
             state_ttl=settings.MEMSTORAGE_DATA_TTL,
             data_ttl=settings.MEMSTORAGE_STATE_TTL,
         )
-        # RedisStorage.from_url("")
     return storage

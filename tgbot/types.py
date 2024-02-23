@@ -1,6 +1,7 @@
 __all__ = ("Optional_Media", "Media", "KeyLike")
 
 from typing import Union, TypeVar
+
 from aiogram.types import InputMediaPhoto, InputMediaVideo, InputMediaDocument, InputMediaAudio
 
 

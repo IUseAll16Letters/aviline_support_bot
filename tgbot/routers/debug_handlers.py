@@ -2,7 +2,7 @@ from aiogram import Router
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 
-from tgbot.logging_config import waster_queries
+from ..logging_config import waster_queries
 
 router = Router()
 

@@ -6,8 +6,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
+from ..logging_config import mailing
 from config.settings import SMTP_MAIL_PARAMS, EMAIL_HOST_USER
-from tgbot.logging_config import mailing
 
 
 async def send_email_to_aviline(subject, text, warranty_card: bytes, warranty_basename: str):

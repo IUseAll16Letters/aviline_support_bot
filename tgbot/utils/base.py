@@ -10,10 +10,9 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import Message, InputMediaVideo, InputMediaPhoto
 from aiogram.utils.keyboard import KeyboardBuilder
 
-from tgbot.constants import MIME_TYPES_ALLOWED, MEDIA_TYPES
-from tgbot.types import Media
-from tgbot.logging_config import utils_logger
-
+from ..constants import MIME_TYPES_ALLOWED, MEDIA_TYPES
+from ..types import Media
+from ..logging_config import utils_logger
 from config import settings
 
 

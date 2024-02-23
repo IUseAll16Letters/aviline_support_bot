@@ -163,6 +163,7 @@ CACHE = {
     0: {
         "HOST": os.getenv('REDIS_HOST'),
         "PORT": int(os.getenv("REDIS_PORT")),
+        "CACHE_DB": 1,
     },
 }
 

@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 
-from tgbot.logging_config import handlers_logger
+from ..logging_config import handlers_logger
 
 
 def state_control(state: Union[State, None]):
